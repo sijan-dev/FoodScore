@@ -12,7 +12,7 @@ app = FastAPI(title="FoodScore API", version="1.0.0")
 # CORS — allows Flutter app to call this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],       # in production, replace * with your domain
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
