@@ -13,9 +13,9 @@ def create_product(data: dict, db: Session) -> str:
     db.execute(text("""
         INSERT INTO products
         (product_id, name, brand, category, ingredients_raw,
-         additives, nutriments, nova_group, nutri_score)
+         additives, nutriments, nova_group, nutri_score, barcode)
         VALUES (:pid, :name, :brand, :cat, :ingr,
-                :additives, :nutriments, :nova, :nutri)
+                :additives, :nutriments, :nova, :nutri, :barcode)
     """), {
         "pid": product_id,
         "name": data.get("name"),
@@ -26,6 +26,7 @@ def create_product(data: dict, db: Session) -> str:
         "nutriments": nutriments_json,
         "nova": data.get("nova_group"),
         "nutri": data.get("nutri_score"),
+        "barcode": data.get("barcode"),
     })
     db.commit()
     return product_id
