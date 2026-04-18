@@ -38,3 +38,18 @@ def get_product(product_id: str, db: Session = Depends(get_db)):
         "flagged_ingredients": row[11],
         "traffic_light": score_service.get_traffic_light(row[4] or 0, row[5] or False)
     }
+
+@router.get("/scan/{barcode}")
+async def scan_barcode_endpoint(
+    barcode: str, 
+    db: Session = Depends(get_db)
+):
+    """Scan a product by barcode - checks local DB first, then OpenFoodFacts"""
+    from app.services.openfoodfacts import scan_barcode
+    
+    result = await scan_barcode(barcode, db)
+    
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    
+    return result
