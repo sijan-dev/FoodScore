@@ -1,0 +1,64 @@
+{
+  "products": [
+    {
+      "id": "oatmeal_001",
+      "name": "Oatmeal",
+      "subtitle": "Whole Grain",
+      "imageUrl": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+      "score": 88,
+      "barcode": "8901234567890",
+      "nutrition": {
+        "energyKcal": 190,
+        "sugarG": 2,
+        "fiberG": 6,
+        "fatG": 4
+      }
+    },
+    {
+      "id": "cola_001",
+      "name": "Classic Cola",
+      "subtitle": "Ultra Processed",
+      "imageUrl": "https://images.unsplash.com/photo-1510626176961-4b57d4fbad04?auto=format&fit=crop&w=800&q=80",
+      "score": 22,
+      "barcode": "8909876543210",
+      "nutrition": {
+        "energyKcal": 150,
+        "sugarG": 39,
+        "fiberG": 0,
+        "fatG": 0
+      }
+    },
+    {
+      "id": "almonds_001",
+      "name": "Raw Almonds",
+      "subtitle": "Heart Healthy",
+      "imageUrl": "https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80",
+      "score": 94,
+      "barcode": "8901122334455",
+      "nutrition": {
+        "energyKcal": 210,
+        "sugarG": 3,
+        "fiberG": 8,
+        "fatG": 16
+      }
+    },
+    {
+      "id": "yogurt_001",
+      "name": "Greek Yogurt",
+      "subtitle": "Dairy",
+      "imageUrl": "https://images.unsplash.com/photo-1481391032119-d89fee407e44?auto=format&fit=crop&w=800&q=80",
+      "score": 65,
+      "barcode": "8909988776655",
+      "nutrition": {
+        "energyKcal": 110,
+        "sugarG": 9,
+        "fiberG": 0,
+        "fatG": 5
+      }
+    }
+  ],
+  "weeklyVitality": {
+    "score": 72,
+    "trend": [65, 78, 52, 88, 42, 94, 72]
+  }
+}
