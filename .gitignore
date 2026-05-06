@@ -124,3 +124,4 @@ app.*.symbols
 __pycache__/
 .venv/
 venv/
+backend/.env
