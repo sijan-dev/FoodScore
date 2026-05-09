@@ -60,7 +60,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               }
             },
           ),
-          Container(color: Colors.black.withOpacity(0.45)),
+          Container(color: Colors.black.withValues(alpha: 0.45)),
           SafeArea(
             child: Column(
               children: [
@@ -99,7 +99,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceVariant.withOpacity(0.6),
+                      color: AppColors.surfaceContainerHighest.withValues(
+                        alpha: 0.6,
+                      ),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: const Text(
@@ -121,7 +123,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(48),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.4),
+                  color: Colors.white.withValues(alpha: 0.4),
                   width: 2,
                 ),
               ),

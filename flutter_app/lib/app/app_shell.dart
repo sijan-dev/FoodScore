@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../screens/home/home_screen.dart';
 import '../screens/placeholders/history_screen.dart';
-import '../screens/placeholders/insights_screen.dart';
 import '../screens/placeholders/settings_screen.dart';
 import 'tokens.dart';
 
@@ -18,12 +17,7 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(navIndexProvider);
 
-    final screens = const [
-      HomeScreen(),
-      HistoryScreen(),
-      InsightsScreen(),
-      SettingsScreen(),
-    ];
+    final screens = const [HomeScreen(), HistoryScreen(), SettingsScreen()];
 
     return Scaffold(
       body: IndexedStack(index: currentIndex, children: screens),
@@ -46,10 +40,10 @@ class _BottomNavBar extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest.withOpacity(0.8),
+            color: AppColors.surfaceContainerLowest.withValues(alpha: 0.8),
             boxShadow: [
               BoxShadow(
-                color: AppColors.onSurface.withOpacity(0.06),
+                color: AppColors.onSurface.withValues(alpha: 0.06),
                 blurRadius: 32,
                 offset: const Offset(0, -12),
               ),
@@ -71,16 +65,10 @@ class _BottomNavBar extends ConsumerWidget {
                 onTap: () => ref.read(navIndexProvider.notifier).state = 1,
               ),
               _NavItem(
-                label: 'Insights',
-                icon: Icons.analytics,
-                isActive: currentIndex == 2,
-                onTap: () => ref.read(navIndexProvider.notifier).state = 2,
-              ),
-              _NavItem(
                 label: 'Settings',
                 icon: Icons.settings,
-                isActive: currentIndex == 3,
-                onTap: () => ref.read(navIndexProvider.notifier).state = 3,
+                isActive: currentIndex == 2,
+                onTap: () => ref.read(navIndexProvider.notifier).state = 2,
               ),
             ],
           ),
@@ -107,7 +95,7 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isActive ? AppColors.primary : AppColors.onSurfaceVariant;
     final background = isActive
-        ? AppColors.primaryFixed.withOpacity(0.7)
+        ? AppColors.primaryFixed.withValues(alpha: 0.7)
         : Colors.transparent;
 
     return GestureDetector(
