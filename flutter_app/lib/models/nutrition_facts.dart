@@ -19,4 +19,13 @@ class NutritionFacts {
       fatG: json['fatG'] as int,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'energyKcal': energyKcal,
+      'sugarG': sugarG,
+      'fiberG': fiberG,
+      'fatG': fatG,
+    };
+  }
 }

@@ -5,6 +5,7 @@ class AppColors {
   static const Color primaryContainer = Color(0xFF386641);
   static const Color secondary = Color(0xFF835500);
   static const Color secondaryContainer = Color(0xFFFEAE2C);
+  static const Color accent = secondaryContainer;
   static const Color tertiary = Color(0xFF841D24);
   static const Color tertiaryContainer = Color(0xFFA43539);
   static const Color surface = Color(0xFFF7F9FF);
@@ -24,4 +25,6 @@ class AppColors {
   static const Color outlineVariant = Color(0xFFC1C9BE);
   static const Color primaryFixed = Color(0xFFBCEFC0);
   static const Color primaryFixedDim = Color(0xFFA0D3A5);
+  static const double radiusSmall = 16;
+  static const double radiusMedium = 20;
 }
