@@ -1,20 +1,84 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
+import '../../app/app_shell.dart';
 import '../../app/tokens.dart';
 import '../../models/product.dart';
-import '../../models/weekly_vitality.dart';
 import '../../state/home_providers.dart';
 import '../scanner/scanner_screen.dart';
+import '../shared/product_history_card.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(productsProvider);
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+
+  List<Product> _searchResults = const <Product>[];
+  bool _isSearching = false;
+  bool _hasSearched = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _runSearch() async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = const <Product>[];
+        _hasSearched = false;
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+      _hasSearched = true;
+    });
+
+    try {
+      final results = await ref
+          .read(productRepositoryProvider)
+          .searchProducts(query);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _searchResults = results;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSearching = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _selectSearchResult(Product product) async {
+    await ref.read(scanHistoryProvider.notifier).addScan(product);
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Added ${product.name} to history.')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final historyAsync = ref.watch(scanHistoryProvider);
-    final vitalityAsync = ref.watch(weeklyVitalityProvider);
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -23,373 +87,424 @@ class HomeScreen extends ConsumerWidget {
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                child: _TopAppBar(onSearch: () {}),
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                child: _TopBar(),
               ),
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: _ScannerHero(
-                  onScanTap: () async {
-                    final product = await Navigator.of(context).push<Product>(
-                      MaterialPageRoute(builder: (_) => const ScannerScreen()),
-                    );
-                    if (product == null || !context.mounted) {
-                      return;
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Added ${product.name} to history.'),
-                      ),
-                    );
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                child: _SearchBar(
+                  controller: _searchController,
+                  focusNode: _searchFocusNode,
+                  isSearching: _isSearching,
+                  onSubmitted: (_) => _runSearch(),
+                  onSearchTap: _runSearch,
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: _SearchResultsSection(
+                hasSearched: _hasSearched,
+                isSearching: _isSearching,
+                results: _searchResults,
+                onSelectProduct: _selectSearchResult,
+                onContributeTap: () => _startScan(context, ref),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: _CategoriesRow(),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+                child: _ScanCard(onTap: () => _startScan(context, ref)),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 26, 20, 12),
+                child: _SectionHeader(
+                  onClear: () async {
+                    await ref.read(scanHistoryProvider.notifier).clear();
+                  },
+                  onViewHistory: () {
+                    ref.read(navIndexProvider.notifier).state = 1;
                   },
                 ),
               ),
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child: _SearchBar(),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-                child: _SectionHeader(
-                  title: 'Last Scanned',
-                  actionLabel: 'View All',
-                  onTap: () {},
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 220,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: historyAsync.when(
-                  data: (history) => _LastScannedList(
-                    items: history.isEmpty
-                        ? productsAsync.valueOrNull ?? []
-                        : history,
-                  ),
-                  loading: () => const _LastScannedLoading(),
-                  error: (_, __) => const _LastScannedLoading(),
+                  data: (history) {
+                    return _RecentList(items: history);
+                  },
+                  loading: () => const _RecentListSkeleton(),
+                  error: (_, _) => const _RecentListSkeleton(),
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 120)),
+            const SliverToBoxAdapter(child: SizedBox(height: 150)),
           ],
         ),
       ),
     );
   }
+
+  static Future<void> _startScan(BuildContext context, WidgetRef ref) async {
+    var status = await Permission.camera.status;
+    if (status.isPermanentlyDenied) {
+      await openAppSettings();
+      return;
+    }
+
+    if (!status.isGranted) {
+      status = await Permission.camera.request();
+      if (status.isPermanentlyDenied) {
+        await openAppSettings();
+        return;
+      }
+      if (!status.isGranted) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Camera permission is required to scan products.'),
+            ),
+          );
+        }
+        return;
+      }
+    }
+
+    final product = await Navigator.of(
+      context,
+    ).push<Product>(MaterialPageRoute(builder: (_) => const ScannerScreen()));
+    if (product == null || !context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Added ${product.name} to history.')),
+    );
+  }
 }
 
-class _TopAppBar extends StatelessWidget {
-  const _TopAppBar({required this.onSearch});
-
-  final VoidCallback onSearch;
-
+class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            const CircleAvatar(
-              radius: 20,
-              backgroundImage: NetworkImage(
-                'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80',
-              ),
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.menu),
+          color: AppColors.onSurface,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            'Open Food Facts',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w700,
             ),
-            const SizedBox(width: 12),
-            Text(
-              'Food Score',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: AppColors.primary,
-              ),
-            ),
-          ],
+          ),
         ),
         IconButton(
-          icon: const Icon(Icons.search),
-          color: AppColors.onSurface.withOpacity(0.7),
-          onPressed: onSearch,
+          onPressed: () {},
+          icon: const Icon(Icons.person_outline),
+          color: AppColors.onSurface,
         ),
       ],
     );
-  }
-}
-
-class _ScannerHero extends StatelessWidget {
-  const _ScannerHero({required this.onScanTap});
-
-  final VoidCallback onScanTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          height: 300,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: AppColors.primary.withOpacity(0.06),
-          ),
-        ),
-        Positioned.fill(
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
-              color: Colors.black.withOpacity(0.1),
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.12),
-                  ),
-                  child: const Icon(
-                    Icons.qr_code_scanner,
-                    color: Colors.white,
-                    size: 40,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Scan Your Essence',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.onSurface,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Instantly decode ingredients and uncover their value.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onSurface.withOpacity(0.8),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.onPrimary,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppColors.radiusSmall,
-                      ),
-                    ),
-                    elevation: 1,
-                  ),
-                  onPressed: onScanTap,
-                  icon: const Icon(Icons.camera_alt_outlined),
-                  label: const Text(
-                    'Scan Barcode',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        ..._scannerCorners(),
-      ],
-    );
-  }
-
-  List<Widget> _scannerCorners() {
-    const color = Colors.white54;
-    const size = 24.0;
-    const stroke = 2.0;
-    return [
-      const Positioned(
-        top: 18,
-        left: 18,
-        child: _CornerStroke(color: color, size: size, stroke: stroke),
-      ),
-      const Positioned(
-        top: 18,
-        right: 18,
-        child: _CornerStroke(
-          color: color,
-          size: size,
-          stroke: stroke,
-          flipX: true,
-        ),
-      ),
-      const Positioned(
-        bottom: 18,
-        left: 18,
-        child: _CornerStroke(
-          color: color,
-          size: size,
-          stroke: stroke,
-          flipY: true,
-        ),
-      ),
-      const Positioned(
-        bottom: 18,
-        right: 18,
-        child: _CornerStroke(
-          color: color,
-          size: size,
-          stroke: stroke,
-          flipX: true,
-          flipY: true,
-        ),
-      ),
-    ];
-  }
-}
-
-class _CornerStroke extends StatelessWidget {
-  const _CornerStroke({
-    required this.color,
-    required this.size,
-    required this.stroke,
-    this.flipX = false,
-    this.flipY = false,
-  });
-
-  final Color color;
-  final double size;
-  final double stroke;
-  final bool flipX;
-  final bool flipY;
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform(
-      alignment: Alignment.center,
-      transform: Matrix4.diagonal3Values(
-        flipX ? -1.0 : 1.0,
-        flipY ? -1.0 : 1.0,
-        1.0,
-      ),
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: CustomPaint(
-          painter: _CornerPainter(color: color, stroke: stroke),
-        ),
-      ),
-    );
-  }
-}
-
-class _CornerPainter extends CustomPainter {
-  const _CornerPainter({required this.color, required this.stroke});
-
-  final Color color;
-  final double stroke;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = stroke
-      ..style = PaintingStyle.stroke;
-
-    final path = Path()
-      ..moveTo(size.width, 0)
-      ..lineTo(0, 0)
-      ..lineTo(0, size.height);
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _CornerPainter oldDelegate) {
-    return oldDelegate.color != color || oldDelegate.stroke != stroke;
   }
 }
 
 class _SearchBar extends StatelessWidget {
+  const _SearchBar({
+    required this.controller,
+    required this.focusNode,
+    required this.isSearching,
+    required this.onSubmitted,
+    required this.onSearchTap,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool isSearching;
+  final ValueChanged<String> onSubmitted;
+  final VoidCallback onSearchTap;
+
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.outlineVariant),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          const Icon(Icons.search, color: Colors.black54),
-          const SizedBox(width: 12),
+          IconButton(
+            icon: Icon(
+              Icons.search,
+              color: AppColors.onSurface.withValues(alpha: 0.7),
+            ),
+            onPressed: onSearchTap,
+          ),
+          const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              'Lookup manual product...',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.onSurface.withOpacity(0.75),
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              textInputAction: TextInputAction.search,
+              onSubmitted: onSubmitted,
+              decoration: InputDecoration(
+                hintText: 'Search for products, brands...',
+                border: InputBorder.none,
+                isDense: true,
+                hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppColors.onSurface.withValues(alpha: 0.65),
+                ),
               ),
             ),
           ),
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(999),
+          if (isSearching)
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          else
+            Icon(
+              Icons.qr_code_scanner,
+              color: AppColors.onSurface.withValues(alpha: 0.8),
             ),
-            child: const Icon(Icons.tune, color: AppColors.primary),
-          ),
+          const SizedBox(width: 8),
         ],
       ),
     );
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    required this.actionLabel,
-    required this.onTap,
+class _SearchResultsSection extends StatelessWidget {
+  const _SearchResultsSection({
+    required this.hasSearched,
+    required this.isSearching,
+    required this.results,
+    required this.onSelectProduct,
+    required this.onContributeTap,
   });
 
-  final String title;
-  final String actionLabel;
+  final bool hasSearched;
+  final bool isSearching;
+  final List<Product> results;
+  final Future<void> Function(Product product) onSelectProduct;
+  final VoidCallback onContributeTap;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!hasSearched) {
+      return const SizedBox.shrink();
+    }
+
+    if (isSearching) {
+      return const Padding(
+        padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+        child: LinearProgressIndicator(),
+      );
+    }
+
+    if (results.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.outlineVariant),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Product not found',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Help improve OpenFoodFacts by contributing this product through barcode scan.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: onContributeTap,
+                icon: const Icon(Icons.qr_code_scanner),
+                label: const Text('Contribute Product'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+      child: Column(
+        children: [
+          for (var i = 0; i < results.length; i++) ...[
+            ProductHistoryCard(
+              product: results[i],
+              onTap: () => onSelectProduct(results[i]),
+            ),
+            if (i != results.length - 1) const SizedBox(height: 12),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoriesRow extends StatelessWidget {
+  const _CategoriesRow();
+
+  @override
+  Widget build(BuildContext context) {
+    const labels = ['All', 'Beverages', 'Snacks', 'Dairy', 'Breakfast'];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++)
+            Padding(
+              padding: EdgeInsets.only(right: i == labels.length - 1 ? 0 : 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: i == 0
+                      ? AppColors.secondaryContainer
+                      : AppColors.surfaceContainer,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  labels[i],
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: i == 0 ? FontWeight.w700 : FontWeight.w500,
+                    color: AppColors.onSurface,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScanCard extends StatelessWidget {
+  const _ScanCard({required this.onTap});
+
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.primaryContainer,
+      borderRadius: BorderRadius.circular(24),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
+          child: Column(
+            children: [
+              Container(
+                width: 86,
+                height: 86,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.qr_code_scanner,
+                  size: 44,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Scan a product',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Get Nutri-Score, Nova group and Eco-Score',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.onClear, required this.onViewHistory});
+
+  final Future<void> Function() onClear;
+  final VoidCallback onViewHistory;
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: AppColors.primary,
+        Expanded(
+          child: Text(
+            'Recently Scanned',
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
         TextButton(
-          onPressed: onTap,
+          onPressed: onViewHistory,
           child: Text(
-            actionLabel.toUpperCase(),
+            'VIEW HISTORY',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.8,
+              fontWeight: FontWeight.w800,
               color: AppColors.primary,
+              letterSpacing: 1.1,
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: onClear,
+          child: Text(
+            'CLEAR',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: AppColors.primary,
+              letterSpacing: 1.1,
             ),
           ),
         ),
@@ -398,127 +513,60 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _LastScannedList extends StatelessWidget {
-  const _LastScannedList({required this.items});
+class _RecentList extends StatelessWidget {
+  const _RecentList({required this.items});
 
   final List<Product> items;
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-      scrollDirection: Axis.horizontal,
-      itemBuilder: (context, index) {
-        final product = items[index];
-        final scoreColor = _scoreColor(product.score);
-        return Container(
-          width: 170,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceVariant,
-            borderRadius: BorderRadius.circular(AppColors.radiusMedium),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.onSurface.withOpacity(0.04),
-                blurRadius: 20,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.network(
-                        product.imageUrl,
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: scoreColor,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${product.score}',
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                product.name,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                product.subtitle.toUpperCase(),
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  letterSpacing: 1.6,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.onSurface.withOpacity(0.7),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-      separatorBuilder: (_, __) => const SizedBox(width: 16),
-      itemCount: items.length,
-    );
-  }
+    if (items.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.outlineVariant),
+        ),
+        child: Text(
+          'No scans yet. Start by scanning your first product.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant),
+        ),
+      );
+    }
 
-  Color _scoreColor(int score) {
-    if (score >= 80) {
-      return AppColors.primary;
-    }
-    if (score >= 50) {
-      return AppColors.accent;
-    }
-    return AppColors.error;
+    return Column(
+      children: [
+        for (var i = 0; i < items.length; i++) ...[
+          ProductHistoryCard(product: items[i]),
+          if (i != items.length - 1) const SizedBox(height: 14),
+        ],
+      ],
+    );
   }
 }
 
-class _LastScannedLoading extends StatelessWidget {
-  const _LastScannedLoading();
+class _RecentListSkeleton extends StatelessWidget {
+  const _RecentListSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-      scrollDirection: Axis.horizontal,
-      itemBuilder: (_, __) => Container(
-        width: 170,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(AppColors.radiusMedium),
+    return Column(
+      children: List.generate(
+        3,
+        (_) => Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: Container(
+            height: 104,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainer,
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
         ),
       ),
-      separatorBuilder: (_, __) => const SizedBox(width: 16),
-      itemCount: 3,
     );
   }
 }
