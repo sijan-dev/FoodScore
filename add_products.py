@@ -195,7 +195,6 @@ def add_products():
                 json=product,
                 timeout=REQUEST_TIMEOUT
             )
-
             if response.status_code == 200:
                 added += 1
                 try:
@@ -242,7 +241,7 @@ def add_products():
 
     if added > 0:
         print("\n🎉 Successfully added new products to FoodScore database!")
-
+    
     # Return exit code based on success
     return 0 if failed == 0 else 1
 
