@@ -7,9 +7,14 @@ Adds multiple products to the database at once
 import requests
 import json
 import time
+import os
+import sys
+from urllib.parse import urljoin
 
-# API endpoint
-API_URL = "http://localhost:8000/products/"
+# API endpoint - configurable via environment variable
+API_URL = os.getenv("FOODSCORE_API_URL", "http://localhost:8000")
+PRODUCTS_ENDPOINT = urljoin(API_URL, "/products/")
+REQUEST_TIMEOUT = 10  # seconds
 
 # List of products to add
 products = [
@@ -176,6 +181,7 @@ products = [
 def add_products():
     """Add all products to the database"""
     print("🚀 Starting bulk product import...")
+    print(f"📍 API Endpoint: {PRODUCTS_ENDPOINT}")
     print("=" * 50)
     
     added = 0
@@ -184,23 +190,42 @@ def add_products():
     
     for i, product in enumerate(products, 1):
         try:
-            response = requests.post(API_URL, json=product)
+            response = requests.post(
+                PRODUCTS_ENDPOINT, 
+                json=product,
+                timeout=REQUEST_TIMEOUT
+            )
             
             if response.status_code == 200:
                 added += 1
-                result = response.json()
-                print(f"✅ [{i}/{len(products)}] Added: {product['name']} (Score: {result.get('health_score', 'N/A')})")
+                try:
+                    result = response.json()
+                    print(f"✅ [{i}/{len(products)}] Added: {product['name']} (Score: {result.get('health_score', 'N/A')})")
+                except json.JSONDecodeError:
+                    print(f"✅ [{i}/{len(products)}] Added: {product['name']}")
             elif response.status_code == 409:
                 skipped += 1
                 print(f"⏭️  [{i}/{len(products)}] Skipped: {product['name']} (already exists)")
             else:
                 failed += 1
-                print(f"❌ [{i}/{len(products)}] Failed: {product['name']} - {response.text}")
+                print(f"❌ [{i}/{len(products)}] Failed: {product['name']} - Status {response.status_code}")
+                try:
+                    error_detail = response.json()
+                    print(f"   Error: {error_detail}")
+                except json.JSONDecodeError:
+                    print(f"   Response: {response.text[:200]}")
         
+        except requests.exceptions.Timeout:
+            failed += 1
+            print(f"❌ [{i}/{len(products)}] Timeout: {product['name']} (request took too long)")
         except requests.exceptions.ConnectionError:
             failed += 1
-            print(f"❌ [{i}/{len(products)}] Connection Error: Make sure the API is running at {API_URL}")
+            print(f"❌ Connection Error: Make sure the API is running at {PRODUCTS_ENDPOINT}")
+            print("   You can set a custom API URL with: export FOODSCORE_API_URL=http://your-url")
             break
+        except requests.exceptions.RequestException as e:
+            failed += 1
+            print(f"❌ [{i}/{len(products)}] Request Error for {product['name']}: {e}")
         except Exception as e:
             failed += 1
             print(f"❌ [{i}/{len(products)}] Error adding {product['name']}: {e}")
@@ -217,6 +242,10 @@ def add_products():
     
     if added > 0:
         print("\n🎉 Successfully added new products to FoodScore database!")
+    
+    # Return exit code based on success
+    return 0 if failed == 0 else 1
 
 if __name__ == "__main__":
-    add_products()
+    exit_code = add_products()
+    sys.exit(exit_code)
