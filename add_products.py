@@ -25,7 +25,7 @@ products = [
         "brand": "Coca-Cola",
         "category": "Beverages",
         "additives": ["e150d", "e338"],
-        "nutriments": {"sugars_100g": 10.6, "saturated_fat_100g": 0, "salt_100g": 0, "fiber_100g": 0, "proteins_100g": 0}
+        "nutriments": {"sugars_100g": 10.6, "fat_100g": 0, "fiber_100g": 0, "proteins_100g": 0}
     },
     {
         "barcode": "5449000134639",
@@ -33,7 +33,7 @@ products = [
         "brand": "Coca-Cola",
         "category": "Beverages",
         "additives": [],
-        "nutriments": {"sugars_100g": 9.0, "saturated_fat_100g": 0, "salt_100g": 0, "fiber_100g": 0, "proteins_100g": 0}
+        "nutriments": {"sugars_100g": 9.0, "fat_100g": 0, "fiber_100g": 0, "proteins_100g": 0}
     },
     {
         "barcode": "5449000212177",
@@ -41,7 +41,7 @@ products = [
         "brand": "Coca-Cola",
         "category": "Beverages",
         "additives": ["e110", "e129"],
-        "nutriments": {"sugars_100g": 11.0, "saturated_fat_100g": 0, "salt_100g": 0, "fiber_100g": 0, "proteins_100g": 0}
+        "nutriments": {"sugars_100g": 11.0, "fat_100g": 0, "fiber_100g": 0, "proteins_100g": 0}
     },
 
     
@@ -52,7 +52,7 @@ products = [
         "brand": "CG Foods",
         "category": "Noodles",
         "additives": ["e621", "e102"],
-        "nutriments": {"sugars_100g": 2, "saturated_fat_100g": 8, "salt_100g": 2.1, "fiber_100g": 1, "proteins_100g": 8}
+        "nutriments": {"sugars_100g": 2, "fat_100g": 8, "fiber_100g": 1, "proteins_100g": 8}
     },
     {
         "barcode": "8901058172001",
@@ -60,7 +60,7 @@ products = [
         "brand": "CG Foods",
         "category": "Noodles",
         "additives": ["e621"],
-        "nutriments": {"sugars_100g": 3, "saturated_fat_100g": 7, "salt_100g": 2.0, "fiber_100g": 1, "proteins_100g": 7}
+        "nutriments": {"sugars_100g": 3, "fat_100g": 7, "fiber_100g": 1, "proteins_100g": 7}
     },
     {
         "barcode": "8901058173008",
@@ -68,7 +68,7 @@ products = [
         "brand": "CG Foods",
         "category": "Noodles",
         "additives": ["e621"],
-        "nutriments": {"sugars_100g": 2.5, "saturated_fat_100g": 7.5, "salt_100g": 2.2, "fiber_100g": 1, "proteins_100g": 7.5}
+        "nutriments": {"sugars_100g": 2.5, "fat_100g": 7.5, "fiber_100g": 1, "proteins_100g": 7.5}
     },
     
     # Dairy
@@ -78,7 +78,7 @@ products = [
         "brand": "Sujal",
         "category": "Dairy",
         "additives": [],
-        "nutriments": {"sugars_100g": 4.5, "saturated_fat_100g": 1.5, "salt_100g": 0.1, "fiber_100g": 0, "proteins_100g": 3.5}
+        "nutriments": {"sugars_100g": 4.5, "fat_100g": 1.5, "fiber_100g": 0, "proteins_100g": 3.5}
     },
     {
         "barcode": "8909876543210",
@@ -86,7 +86,7 @@ products = [
         "brand": "Nepal Dairy",
         "category": "Dairy",
         "additives": [],
-        "nutriments": {"sugars_100g": 4.8, "saturated_fat_100g": 1.8, "salt_100g": 0.1, "fiber_100g": 0, "proteins_100g": 3.2}
+        "nutriments": {"sugars_100g": 4.8, "fat_100g": 1.8, "fiber_100g": 0, "proteins_100g": 3.2}
     },
     {
         "barcode": "8901234567880",
@@ -94,7 +94,7 @@ products = [
         "brand": "Amul",
         "category": "Dairy",
         "additives": [],
-        "nutriments": {"sugars_100g": 0.1, "saturated_fat_100g": 51, "salt_100g": 1.5, "fiber_100g": 0, "proteins_100g": 0.9}
+        "nutriments": {"sugars_100g": 0.1, "fat_100g": 51, "fiber_100g": 0, "proteins_100g": 0.9}
     },
     
     # Biscuits & Snacks
@@ -104,7 +104,7 @@ products = [
         "brand": "Mondelez",
         "category": "Snacks",
         "additives": ["e322", "e476"],
-        "nutriments": {"sugars_100g": 35, "saturated_fat_100g": 12, "salt_100g": 0.8, "fiber_100g": 2, "proteins_100g": 5}
+        "nutriments": {"sugars_100g": 35, "fat_100g": 12, "fiber_100g": 2, "proteins_100g": 5}
     },
     {
         "barcode": "8901058100004",
@@ -112,7 +112,7 @@ products = [
         "brand": "Parle",
         "category": "Snacks",
         "additives": [],
-        "nutriments": {"sugars_100g": 25, "saturated_fat_100g": 6, "salt_100g": 0.5, "fiber_100g": 2.5, "proteins_100g": 7}
+        "nutriments": {"sugars_100g": 25, "fat_100g": 6, "fiber_100g": 2.5, "proteins_100g": 7}
     },
     {
         "barcode": "8901725004417",
@@ -120,7 +120,7 @@ products = [
         "brand": "Britannia",
         "category": "Snacks",
         "additives": ["e322"],
-        "nutriments": {"sugars_100g": 28, "saturated_fat_100g": 8, "salt_100g": 0.6, "fiber_100g": 1.5, "proteins_100g": 6}
+        "nutriments": {"sugars_100g": 28, "fat_100g": 8, "fiber_100g": 1.5, "proteins_100g": 6}
     },
     
     # Chips
@@ -130,7 +130,7 @@ products = [
         "brand": "Kellogg's",
         "category": "Chips",
         "additives": ["e621", "e631", "e627"],
-        "nutriments": {"sugars_100g": 2, "saturated_fat_100g": 15, "salt_100g": 1.5, "fiber_100g": 2, "proteins_100g": 5}
+        "nutriments": {"sugars_100g": 2, "fat_100g": 15, "fiber_100g": 2, "proteins_100g": 5}
     },
     {
         "barcode": "8901443010710",
@@ -138,7 +138,7 @@ products = [
         "brand": "PepsiCo",
         "category": "Chips",
         "additives": ["e621"],
-        "nutriments": {"sugars_100g": 1, "saturated_fat_100g": 10, "salt_100g": 1.2, "fiber_100g": 2, "proteins_100g": 5}
+        "nutriments": {"sugars_100g": 1, "fat_100g": 10, "fiber_100g": 2, "proteins_100g": 5}
     },
     
     # Juices
@@ -148,7 +148,7 @@ products = [
         "brand": "Dabur",
         "category": "Beverages",
         "additives": [],
-        "nutriments": {"sugars_100g": 12, "saturated_fat_100g": 0, "salt_100g": 0, "fiber_100g": 0.5, "proteins_100g": 0.5}
+        "nutriments": {"sugars_100g": 12, "fat_100g": 0, "fiber_100g": 0.5, "proteins_100g": 0.5}
     },
     {
         "barcode": "8901030510246",
@@ -156,7 +156,7 @@ products = [
         "brand": "Dabur",
         "category": "Beverages",
         "additives": [],
-        "nutriments": {"sugars_100g": 11, "saturated_fat_100g": 0, "salt_100g": 0, "fiber_100g": 0.5, "proteins_100g": 0.5}
+        "nutriments": {"sugars_100g": 11, "fat_100g": 0, "fiber_100g": 0.5, "proteins_100g": 0.5}
     },
     
     # Rice/Cooking
@@ -166,7 +166,7 @@ products = [
         "brand": "India Gate",
         "category": "Cooking",
         "additives": [],
-        "nutriments": {"sugars_100g": 0.1, "saturated_fat_100g": 0.1, "salt_100g": 0, "fiber_100g": 1, "proteins_100g": 7}
+        "nutriments": {"sugars_100g": 0.1, "fat_100g": 0.1, "fiber_100g": 1, "proteins_100g": 7}
     },
     {
         "barcode": "8901050501013",
@@ -174,7 +174,7 @@ products = [
         "brand": "Fortune",
         "category": "Cooking",
         "additives": [],
-        "nutriments": {"sugars_100g": 0, "saturated_fat_100g": 14, "salt_100g": 0, "fiber_100g": 0, "proteins_100g": 0}
+        "nutriments": {"sugars_100g": 0, "fat_100g": 14, "fiber_100g": 0, "proteins_100g": 0}
     }
 ]
 
