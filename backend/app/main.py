@@ -50,10 +50,11 @@ def startup():
     Base.metadata.create_all(bind=engine)
     if SCHEMA_FILE.exists():
         schema_sql = SCHEMA_FILE.read_text(encoding="utf-8")
-        statements = [s.strip() for s in schema_sql.split(";") if s.strip()]
-        with engine.begin() as connection:
-            for statement in statements:
-                connection.exec_driver_sql(statement)
+        # Use raw connection to execute multi-statement SQL (handles $$ functions)
+        with engine.raw_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(schema_sql)
+            conn.commit()
 
 
 app.include_router(auth.router)
