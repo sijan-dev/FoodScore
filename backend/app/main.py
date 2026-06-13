@@ -59,6 +59,7 @@ def home():
 def health_check(db: Session = Depends(get_db)):
     """Health check endpoint for monitoring and container orchestration"""
     try:
+        # Verify database connection
         db.execute(text("SELECT 1"))
         return {
             "status": "healthy",
