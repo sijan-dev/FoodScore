@@ -1,6 +1,6 @@
 import uuid
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 from app.database import Base
 
@@ -14,8 +14,8 @@ class Product(Base):
     category = Column(String)
     image_url = Column(String)
     ingredients_raw = Column(String)
-    additives = Column(JSON, default=[])
-    nutriments = Column(JSON, default={})
+    additives = Column(JSONB, default=[])
+    nutriments = Column(JSONB, default={})
     nova_group = Column(Integer)
     nutri_score = Column(String(1))
     health_score = Column(Integer)
