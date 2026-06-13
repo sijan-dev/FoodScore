@@ -129,3 +129,7 @@ venv/
 # Project Documentation (local review files)
 PROJECT_REVIEW.md
 DOCKER_SETUP.md
+
+# Google Services / Firebase (contains real API keys)
+google-services.json
+flutter_app/android/app/google-services.json

@@ -22,7 +22,7 @@ def save_scan(
         raise HTTPException(status_code=401, detail="Token required")
     
     token = authorization.replace("Bearer ", "")
-    payload = auth_service.verify_token(token)
+    payload = auth_service.decode_token(token)
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid token")
     
@@ -52,7 +52,7 @@ def get_history(limit: int = 20, authorization: str = Header(None), db: Session 
         raise HTTPException(status_code=401, detail="Token required")
     
     token = authorization.replace("Bearer ", "")
-    payload = auth_service.verify_token(token)
+    payload = auth_service.decode_token(token)
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid token")
     

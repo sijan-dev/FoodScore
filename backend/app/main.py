@@ -1,8 +1,11 @@
+import os
+import logging
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import traceback
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import engine, Base, get_db
@@ -13,7 +16,7 @@ app = FastAPI(title="FoodScore API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,9 +30,10 @@ async def catch_exceptions(request: Request, call_next):
     try:
         return await call_next(request)
     except Exception as e:
+        logger.exception("Unhandled exception")
         return JSONResponse(
             status_code=500,
-            content={"error": str(e), "detail": traceback.format_exc()}
+            content={"error": "Internal server error"}
         )
 
 
