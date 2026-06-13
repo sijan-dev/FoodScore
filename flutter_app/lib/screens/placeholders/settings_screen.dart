@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/navigation.dart';
 import '../../app/tokens.dart';
 import '../../providers/auth_provider.dart';
 import '../profile/profile_setup_screen.dart';
@@ -23,7 +24,7 @@ class SettingsScreen extends ConsumerWidget {
               children: [
                 _IconButton(
                   icon: Icons.arrow_back,
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: () => navIndex.value = 0,
                 ),
                 const Spacer(),
                 Text(

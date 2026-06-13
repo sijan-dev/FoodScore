@@ -26,7 +26,7 @@ def save_scan(
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid token")
     
-    user_id = payload.get("user_id")
+    user_id = payload.get("sub")
     
     product_id = scan_data.product_id
     barcode = scan_data.barcode
@@ -57,7 +57,7 @@ def get_history(limit: int = 20, authorization: str = Header(None), db: Session 
         raise HTTPException(status_code=401, detail="Invalid token")
     
     # Fixed: user_id, db, limit (not user_id, limit, db)
-    scans = scan_history_service.get_user_scans(payload["user_id"], db, limit)
+    scans = scan_history_service.get_user_scans(payload["sub"], db, limit)
     return {"scans": scans}
 
 @router.get("/recent")
