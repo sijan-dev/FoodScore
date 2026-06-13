@@ -69,7 +69,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Know what\'s on your plate',
+                'Know what\'s on your Food',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
