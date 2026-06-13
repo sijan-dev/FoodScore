@@ -8,7 +8,7 @@ from sqlalchemy import text
 from app.database import engine, Base, get_db
 from app.models import product, nutrition, score, user
 from app.api import products, score as score_router, search, auth
-
+from app.api import scan
 app = FastAPI(title="FoodScore API", version="1.0.0")
 
 app.add_middleware(
@@ -45,6 +45,7 @@ def startup():
 
 
 app.include_router(auth.router)
+app.include_router(scan.router)
 app.include_router(products.router)
 app.include_router(score_router.router)
 app.include_router(search.router)

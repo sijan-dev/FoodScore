@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.product import ProductCreate
 from app.services import product_service, score_service
+from app.services.openfoodfacts import scan_barcode
+from app.services.recommendations_service import get_recommendations, get_better_alternatives
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -25,6 +27,12 @@ def list_products(
         for r in rows
     ]
 
+# IMPORTANT: Specific routes BEFORE the {product_id} wildcard
+@router.get("/recommendations")
+def get_recommendations_endpoint(limit: int = 5, db: Session = Depends(get_db)):
+    return get_recommendations(None, limit, db)
+
+# Wildcard route must be LAST
 @router.get("/{product_id}")
 def get_product(product_id: str, db: Session = Depends(get_db)):
     row = product_service.get_product(product_id, db)
