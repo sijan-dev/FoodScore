@@ -146,6 +146,13 @@ class AuthNotifier extends Notifier<AuthState> {
   void clearError() {
     state = state.copyWith(errorMessage: null);
   }
+
+  void setError(String message) {
+    state = state.copyWith(
+      status: AuthStatus.error,
+      errorMessage: message,
+    );
+  }
 }
 
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(

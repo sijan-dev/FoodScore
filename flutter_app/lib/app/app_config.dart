@@ -1,5 +1,5 @@
 class AppConfig {
-  // Change this to your dev machine's local IP when testing on a real phone
-  // over WiFi. Use 'http://localhost:8000' for the emulator.
-  static const String apiBaseUrl = 'http://192.168.1.10:8000';
+  // Production API URL - deployed on Render
+  // For local testing: http://localhost:8000 (emulator) or http://192.168.1.X:8000 (device over WiFi)
+  static const String apiBaseUrl = 'https://foodscore-ary3.onrender.com';
 }

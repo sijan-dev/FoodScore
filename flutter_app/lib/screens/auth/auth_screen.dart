@@ -28,18 +28,40 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   void _submit() {
-    if (_isRegisterMode) {
-      ref.read(authProvider.notifier).register(
-        _usernameController.text.trim(),
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-    } else {
-      ref.read(authProvider.notifier).signInWithEmail(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final username = _usernameController.text.trim();
+
+    // Validate fields
+    if (email.isEmpty) {
+      ref.read(authProvider.notifier).setError('Please enter your email');
+      return;
     }
+    if (!_isValidEmail(email)) {
+      ref.read(authProvider.notifier).setError('Please enter a valid email');
+      return;
+    }
+    if (password.isEmpty) {
+      ref.read(authProvider.notifier).setError('Please enter your password');
+      return;
+    }
+    if (_isRegisterMode) {
+      if (username.isEmpty) {
+        ref.read(authProvider.notifier).setError('Please choose a username');
+        return;
+      }
+      if (password.length < 6) {
+        ref.read(authProvider.notifier).setError('Password must be at least 6 characters');
+        return;
+      }
+      ref.read(authProvider.notifier).register(username, email, password);
+    } else {
+      ref.read(authProvider.notifier).signInWithEmail(email, password);
+    }
+  }
+
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(email);
   }
 
   @override

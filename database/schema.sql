@@ -63,7 +63,12 @@ CREATE TABLE IF NOT EXISTS users (
     user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     username VARCHAR(100) UNIQUE NOT NULL,
     email VARCHAR(200) UNIQUE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    password_hash VARCHAR(255),
+    google_id VARCHAR(255) UNIQUE,
+    display_name VARCHAR(100),
+    avatar_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Scan history table
@@ -115,12 +120,9 @@ INSERT INTO additive_reference (e_number, common_name, risk_tier, is_banned) VAL
 ON CONFLICT (e_number) DO NOTHING;
 -- Add authentication columns to users table
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(100);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name VARCHAR(100);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255) UNIQUE;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_id VARCHAR(255) UNIQUE;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}'::jsonb;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
 
 -- Create user_settings table
@@ -136,7 +138,6 @@ CREATE TABLE IF NOT EXISTS user_settings (
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
-CREATE INDEX IF NOT EXISTS idx_users_apple_id ON users(apple_id);
 CREATE INDEX IF NOT EXISTS idx_scan_history_user_id ON scan_history(user_id);
 CREATE INDEX IF NOT EXISTS idx_scan_history_scanned_at ON scan_history(scanned_at);
 CREATE INDEX IF NOT EXISTS idx_products_healthy ON products(health_score) WHERE health_score >= 70;
