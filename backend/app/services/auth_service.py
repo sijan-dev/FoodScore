@@ -90,6 +90,13 @@ def authenticate_or_create_google_user(db: Session, id_token: dict) -> User:
 
     user = get_user_by_google_id(db, google_id)
     if user:
+        # Update profile info from Google on every sign-in
+        if name and name != user.display_name:
+            user.display_name = name
+        if picture and picture != user.avatar_url:
+            user.avatar_url = picture
+        db.commit()
+        db.refresh(user)
         return user
 
     user = get_user_by_email(db, email)
@@ -119,6 +126,10 @@ def authenticate_or_create_google_user(db: Session, id_token: dict) -> User:
 
 
 def register_user(db: Session, username: str, email: str, password: str) -> User:
+    if len(password) < 6:
+        raise ValueError("Password must be at least 6 characters long")
+    if len(username) < 2:
+        raise ValueError("Username must be at least 2 characters long")
     if get_user_by_email(db, email):
         raise ValueError("Email already registered")
 

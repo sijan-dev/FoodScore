@@ -1,9 +1,17 @@
 import os
+import sys
 import logging
+from pathlib import Path
+
+# Add the backend directory to Python path so imports like 'from app.database...' work
+# when the app is run from the project root (e.g., Render deployment)
+_backend_dir = Path(__file__).resolve().parent.parent
+if str(_backend_dir) not in sys.path:
+    sys.path.insert(0, str(_backend_dir))
+
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
@@ -42,10 +50,14 @@ def startup():
     Base.metadata.create_all(bind=engine)
     if SCHEMA_FILE.exists():
         schema_sql = SCHEMA_FILE.read_text(encoding="utf-8")
-        statements = [s.strip() for s in schema_sql.split(";") if s.strip()]
-        with engine.begin() as connection:
-            for statement in statements:
-                connection.exec_driver_sql(statement)
+        # Use raw connection to execute multi-statement SQL (handles $$ functions)
+        conn = engine.raw_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(schema_sql)
+            conn.commit()
+        finally:
+            conn.close()
 
 
 app.include_router(auth.router)
