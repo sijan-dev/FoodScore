@@ -58,7 +58,7 @@ def find_similar_healthier(product_id: str, db: Session, top_n: int = 5):
 
     results = []
     for dist, idx in zip(distances[0], indices[0]):
-        if ids[idx] == product_id:
+        if str(ids[idx]) == str(product_id):
             continue
         if scores[idx] is None or scores[idx] <= current_score:
             continue
