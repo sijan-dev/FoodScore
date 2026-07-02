@@ -12,7 +12,7 @@ class AuthScreen extends ConsumerStatefulWidget {
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
-  bool _showEmailForm = false;
+
   bool _isRegisterMode = false;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -32,7 +32,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final password = _passwordController.text;
     final username = _usernameController.text.trim();
 
-    // Validate fields
     if (email.isEmpty) {
       ref.read(authProvider.notifier).setError('Please enter your email');
       return;
@@ -69,51 +68,65 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Column(
             children: [
-              const SizedBox(height: 60),
-              Icon(
-                Icons.restaurant_menu,
-                size: 80,
-                color: AppColors.primary,
+              const SizedBox(height: 72),
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  border: Border.all(color: context.outlineVariant, width: 1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Image.asset(
+                    'assets/images/android-chrome-192x192.png',
+                    width: 72,
+                    height: 72,
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               Text(
                 'FoodScore',
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.primary,
+                  fontWeight: FontWeight.w300,
+                  letterSpacing: 6,
+                  color: context.primary,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Text(
-                'Know what\'s on your Food',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                'Know what\'s on your food',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.onSurfaceVariant,
+                  letterSpacing: 2,
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 56),
               if (authState.errorMessage != null)
                 Container(
                   width: double.infinity,
                   margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.1),
+                    border: Border.all(color: context.error.withValues(alpha: 0.3)),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline, color: AppColors.error, size: 20),
-                      const SizedBox(width: 8),
+                      Icon(Icons.error_outline, color: context.error, size: 18),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           authState.errorMessage!,
-                          style: TextStyle(color: AppColors.error, fontSize: 13),
+                          style: TextStyle(color: context.error, fontSize: 13),
                         ),
                       ),
                     ],
@@ -124,86 +137,47 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   padding: EdgeInsets.only(bottom: 20),
                   child: CircularProgressIndicator(),
                 ),
-              _GoogleButton(
+              _OutlinedButton(
+                label: 'Continue with Google',
+                icon: Icons.g_mobiledata,
+                imagePath: 'assets/images/google_logo.png',
                 onTap: () => ref.read(authProvider.notifier).signInWithGoogle(),
               ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => setState(() => _showEmailForm = !_showEmailForm),
-                child: Text(
-                  _showEmailForm
-                      ? 'Hide email sign in'
-                      : 'Sign in with email instead',
-                  style: TextStyle(color: AppColors.onSurfaceVariant),
-                ),
-              ),
-              if (_showEmailForm) ...[
-                const SizedBox(height: 8),
+              const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerLowest,
-                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: context.outlineVariant, width: 1),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (_isRegisterMode) ...[
-                        TextField(
+                        _AuthField(
                           controller: _usernameController,
-                          decoration: InputDecoration(
-                            labelText: 'Username',
-                            prefixIcon: const Icon(Icons.person_outline),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: AppColors.surfaceContainer,
-                          ),
+                          label: 'Username',
+                          icon: Icons.person_outline,
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 14),
                       ],
-                      TextField(
+                      _AuthField(
                         controller: _emailController,
+                        label: 'Email',
+                        icon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: const Icon(Icons.email_outlined),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: AppColors.surfaceContainer,
-                        ),
                       ),
-                      const SizedBox(height: 12),
-                      TextField(
+                      const SizedBox(height: 14),
+                      _AuthField(
                         controller: _passwordController,
+                        label: 'Password',
+                        icon: Icons.lock_outline,
+                        isPassword: true,
                         obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                            ),
-                            onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword,
-                            ),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: AppColors.surfaceContainer,
+                        onToggleVisibility: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       SizedBox(
                         width: double.infinity,
                         child: FilledButton(
@@ -211,15 +185,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           style: FilledButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: Text(
                             _isRegisterMode ? 'Create Account' : 'Sign In',
+                            style: const TextStyle(letterSpacing: 1),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                       Center(
                         child: TextButton(
                           onPressed: () => setState(
@@ -229,25 +204,29 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             _isRegisterMode
                                 ? 'Already have an account? Sign in'
                                 : 'Don\'t have an account? Register',
+                            style: TextStyle(
+                              color: context.primary,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               TextButton(
                 onPressed: () => ref.read(authProvider.notifier).skipToApp(),
                 child: Text(
                   'Skip for now',
                   style: TextStyle(
-                    color: AppColors.onSurfaceVariant,
-                    fontSize: 15,
+                    color: context.onSurfaceVariant.withValues(alpha: 0.6),
+                    fontSize: 13,
+                    letterSpacing: 1,
                   ),
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 48),
             ],
           ),
         ),
@@ -256,10 +235,81 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 }
 
-class _GoogleButton extends StatelessWidget {
-  const _GoogleButton({required this.onTap});
+class _AuthField extends StatelessWidget {
+  const _AuthField({
+    required this.controller,
+    required this.label,
+    required this.icon,
+    this.keyboardType,
+    this.isPassword = false,
+    this.obscureText = false,
+    this.onToggleVisibility,
+  });
 
+  final TextEditingController controller;
+  final String label;
+  final IconData icon;
+  final TextInputType? keyboardType;
+  final bool isPassword;
+  final bool obscureText;
+  final VoidCallback? onToggleVisibility;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      style: const TextStyle(fontSize: 14),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          color: context.onSurfaceVariant,
+          fontSize: 12,
+          letterSpacing: 1,
+        ),
+        prefixIcon: Icon(icon, size: 20),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  obscureText ? Icons.visibility_off : Icons.visibility,
+                  size: 20,
+                ),
+                onPressed: onToggleVisibility,
+              )
+            : null,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: context.outlineVariant),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: context.outlineVariant.withValues(alpha: 0.5)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: context.primary, width: 1),
+        ),
+        filled: true,
+        fillColor: context.surface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+    );
+  }
+}
+
+class _OutlinedButton extends StatelessWidget {
+  const _OutlinedButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    this.imagePath,
+  });
+
+  final String label;
+  final IconData icon;
   final VoidCallback onTap;
+  final String? imagePath;
 
   @override
   Widget build(BuildContext context) {
@@ -270,16 +320,29 @@ class _GoogleButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
-          side: BorderSide(color: AppColors.surfaceContainerHighest),
+          side: BorderSide(color: context.outlineVariant, width: 1),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.g_mobiledata, size: 24),
-            const SizedBox(width: 8),
-            const Text('Sign in with Google'),
+            if (imagePath != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Image.asset(imagePath!, width: 22, height: 22),
+              )
+            else
+              Icon(icon, size: 22),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                letterSpacing: 1,
+                color: context.onSurface,
+              ),
+            ),
           ],
         ),
       ),

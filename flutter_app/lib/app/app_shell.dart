@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'navigation.dart';
 
+import 'navigation.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/placeholders/history_screen.dart';
 import '../screens/placeholders/settings_screen.dart';
@@ -25,94 +25,129 @@ class AppShell extends ConsumerWidget {
   }
 }
 
-class _BottomNavBar extends ConsumerWidget {
+class _BottomNavBar extends StatelessWidget {
   const _BottomNavBar();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentIndex = navIndex.value;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, -6),
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: navIndex,
+      builder: (context, currentIndex, _) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
+          decoration: BoxDecoration(
+            color: context.surfaceContainerLowest,
+            boxShadow: [
+              BoxShadow(
+                color: context.onSurface.withValues(alpha: 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, -6),
+              ),
+            ],
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
-        ],
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _NavItem(
-            label: 'Home',
-            icon: Icons.home,
-            isActive: currentIndex == 0,
-            onTap: () => navIndex.value = 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _NavItem(
+                label: 'Home',
+                icon: Icons.home,
+                activeIcon: Icons.home_rounded,
+                isActive: currentIndex == 0,
+                onTap: () => navIndex.value = 0,
+              ),
+              _NavItem(
+                label: 'History',
+                icon: Icons.history,
+                activeIcon: Icons.history_rounded,
+                isActive: currentIndex == 1,
+                onTap: () => navIndex.value = 1,
+              ),
+              _NavItem(
+                label: 'Settings',
+                icon: Icons.settings,
+                activeIcon: Icons.settings_rounded,
+                isActive: currentIndex == 2,
+                onTap: () => navIndex.value = 2,
+              ),
+            ],
           ),
-          _NavItem(
-            label: 'History',
-            icon: Icons.history,
-            isActive: currentIndex == 1,
-            onTap: () => navIndex.value = 1,
-          ),
-          _NavItem(
-            label: 'Settings',
-            icon: Icons.settings,
-            isActive: currentIndex == 2,
-            onTap: () => navIndex.value = 2,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
 class _NavItem extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+  final bool isActive;
+  final VoidCallback onTap;
+
   const _NavItem({
     required this.label,
     required this.icon,
+    required this.activeIcon,
     required this.isActive,
     required this.onTap,
   });
 
-  final String label;
-  final IconData icon;
-  final bool isActive;
-  final VoidCallback onTap;
-
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? AppColors.onPrimary : AppColors.onSurfaceVariant;
-    final background = isActive
-        ? AppColors.primaryContainer
-        : Colors.transparent;
-    return InkWell(
+    final color = isActive ? context.onPrimary : context.onSurfaceVariant;
+    final bgColor = isActive ? context.primaryContainer : Colors.transparent;
+
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         decoration: BoxDecoration(
-          color: background,
+          color: bgColor,
           borderRadius: BorderRadius.circular(18),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color),
-            if (isActive) ...[
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            AnimatedScale(
+              scale: isActive ? 1.15 : 1.0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutBack,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (child, anim) => ScaleTransition(
+                  scale: anim,
+                  child: child,
+                ),
+                child: Icon(
+                  isActive ? activeIcon : icon,
+                  key: ValueKey(isActive),
                   color: color,
-                  fontWeight: FontWeight.w600,
+                  size: 24,
                 ),
               ),
-            ],
+            ),
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 250),
+              sizeCurve: Curves.easeOutCubic,
+              firstChild: const SizedBox(width: 0, height: 0),
+              secondChild: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+              crossFadeState: isActive
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+            ),
           ],
         ),
       ),

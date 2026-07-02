@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../app/tokens.dart';
 
 class WelcomePage extends StatelessWidget {
@@ -12,13 +14,24 @@ class WelcomePage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 120,
-            height: 120,
+            width: 130,
+            height: 130,
             decoration: BoxDecoration(
-              color: AppColors.primaryContainer.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(30),
+              color: context.primaryContainer.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(32),
             ),
-            child: Icon(Icons.restaurant_menu, size: 64, color: AppColors.primary),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: Image.asset(
+                'assets/images/android-chrome-192x192.png',
+                width: 100,
+                height: 100,
+              ),
+            ).animate().fadeIn(duration: 500.ms).scaleXY(
+              begin: 0,
+              end: 1,
+              curve: Curves.easeOutBack,
+            ),
           ),
           const SizedBox(height: 32),
           Text(
@@ -26,17 +39,25 @@ class WelcomePage extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w800,
-              color: AppColors.primary,
+              color: context.primary,
             ),
+          ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(
+            begin: 0.3,
+            end: 0,
+            curve: Curves.easeOutCubic,
           ),
           const SizedBox(height: 16),
           Text(
             'Your personal food scoring companion.\nScan, track, and make healthier choices.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: context.onSurfaceVariant,
               height: 1.5,
             ),
+          ).animate().fadeIn(duration: 400.ms, delay: 400.ms).slideY(
+            begin: 0.3,
+            end: 0,
+            curve: Curves.easeOutCubic,
           ),
         ],
       ),

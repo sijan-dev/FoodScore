@@ -15,7 +15,7 @@ class HistoryScreen extends ConsumerWidget {
     final grouped = _groupByDate(history);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
@@ -24,10 +24,10 @@ class HistoryScreen extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: AppColors.surfaceContainer,
-                  child: const Icon(
+                  backgroundColor: context.surfaceContainer,
+                  child: Icon(
                     Icons.person_outline,
-                    color: AppColors.onSurface,
+                    color: context.onSurface,
                   ),
                 ),
                 const Spacer(),
@@ -69,27 +69,77 @@ class HistoryScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 20),
-            for (final entry in grouped.entries) ...[
-              _SectionHeader(title: entry.key),
-              const SizedBox(height: 10),
-              for (final record in entry.value)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _HistoryCard(
-                    record: record,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              ProductDetailScreen(product: record.product),
-                        ),
-                      );
-                    },
+            if (history.isEmpty)
+              _EmptyHistoryCard()
+            else
+              for (final entry in grouped.entries) ...[
+                _SectionHeader(title: entry.key),
+                const SizedBox(height: 10),
+                for (final record in entry.value)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _HistoryCard(
+                      record: record,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ProductDetailScreen(product: record.product),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-            ],
+              ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _EmptyHistoryCard extends StatelessWidget {
+  const _EmptyHistoryCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: context.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: context.primaryContainer.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.qr_code_scanner,
+              size: 40,
+              color: context.primary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No scans yet',
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Scan a product barcode to see your history here.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: context.onSurfaceVariant,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -110,10 +160,10 @@ class _IconButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainer,
+          color: context.surfaceContainer,
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Icon(icon, color: AppColors.onSurface),
+        child: Icon(icon, color: context.onSurface),
       ),
     );
   }
@@ -135,7 +185,7 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
@@ -144,10 +194,10 @@ class _StatCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primaryContainer.withValues(alpha: 0.15),
+              color: context.primaryContainer.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: AppColors.primary),
+            child: Icon(icon, color: context.primary),
           ),
           const SizedBox(width: 10),
           Column(
@@ -162,7 +212,7 @@ class _StatCard extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: context.onSurfaceVariant,
                 ),
               ),
             ],
@@ -208,7 +258,7 @@ class _HistoryCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: context.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -223,7 +273,7 @@ class _HistoryCard extends StatelessWidget {
                 errorBuilder: (context, error, stackTrace) => Container(
                   width: 58,
                   height: 58,
-                  color: AppColors.surfaceContainer,
+                  color: context.surfaceContainer,
                   child: const Icon(Icons.image_not_supported),
                 ),
               ),
@@ -245,7 +295,7 @@ class _HistoryCard extends StatelessWidget {
                   Text(
                     record.product.subtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: context.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -274,7 +324,7 @@ class _HistoryCard extends StatelessWidget {
                 Text(
                   _timeLabel(record.scannedAt),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: context.onSurfaceVariant,
                   ),
                 ),
               ],

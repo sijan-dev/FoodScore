@@ -15,7 +15,7 @@ class HistoryRecommendationsScreen extends ConsumerWidget {
     final grouped = _groupByDate(history);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
@@ -130,10 +130,10 @@ class _IconButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainer,
+          color: context.surfaceContainer,
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Icon(icon, color: AppColors.onSurface),
+        child: Icon(icon, color: context.onSurface),
       ),
     );
   }
@@ -155,7 +155,7 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
@@ -164,10 +164,10 @@ class _StatCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primaryContainer.withValues(alpha: 0.15),
+              color: context.primaryContainer.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: AppColors.primary),
+            child: Icon(icon, color: context.primary),
           ),
           const SizedBox(width: 10),
           Column(
@@ -182,7 +182,7 @@ class _StatCard extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: context.onSurfaceVariant,
                 ),
               ),
             ],
@@ -211,7 +211,7 @@ class _RecommendationCard extends StatelessWidget {
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -220,11 +220,11 @@ class _RecommendationCard extends StatelessWidget {
           Container(
             height: 90,
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainer,
+              color: context.surfaceContainer,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Center(
-              child: Icon(Icons.image, color: AppColors.onSurfaceVariant),
+            child: Center(
+              child: Icon(Icons.image, color: context.onSurfaceVariant),
             ),
           ),
           const SizedBox(height: 10),
@@ -240,7 +240,7 @@ class _RecommendationCard extends StatelessWidget {
             subtitle,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+            ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
           ),
           const Spacer(),
           _ScoreChip(score: score),
@@ -312,7 +312,7 @@ class _HistoryCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: context.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -324,11 +324,14 @@ class _HistoryCard extends StatelessWidget {
                 width: 58,
                 height: 58,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 58,
-                  height: 58,
-                  color: AppColors.surfaceContainer,
-                  child: const Icon(Icons.image_not_supported),
+                errorBuilder: (context, error, stackTrace) => ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/images/android-chrome-192x192.png',
+                    width: 58,
+                    height: 58,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
@@ -349,7 +352,7 @@ class _HistoryCard extends StatelessWidget {
                   Text(
                     record.product.subtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: context.onSurfaceVariant,
                     ),
                   ),
                 ],

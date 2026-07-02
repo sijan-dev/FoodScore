@@ -62,7 +62,7 @@ class _ContributionFlowScreenState extends State<ContributionFlowScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       appBar: AppBar(title: const Text('Contribute Product')),
       body: SafeArea(
         child: Column(
@@ -137,7 +137,7 @@ class _StepHeader extends StatelessWidget {
           'Step ${step + 1} of 3',
           style: Theme.of(
             context,
-          ).textTheme.labelLarge?.copyWith(color: AppColors.onSurfaceVariant),
+          ).textTheme.labelLarge?.copyWith(color: context.onSurfaceVariant),
         ),
         const SizedBox(height: 8),
         LinearProgressIndicator(value: (step + 1) / 3),
@@ -167,7 +167,7 @@ class _UploadStep extends StatelessWidget {
           'Clear, well-lit photos help our system recognize the product.',
           style: Theme.of(
             context,
-          ).textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant),
+          ).textTheme.bodyMedium?.copyWith(color: context.onSurfaceVariant),
         ),
         const SizedBox(height: 18),
         _UploadCard(label: 'Front of package', onPick: onPick),
@@ -179,13 +179,13 @@ class _UploadStep extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.surfaceVariant,
+            color: context.surfaceVariant,
             borderRadius: BorderRadius.circular(AppColors.radiusMedium),
-            border: Border.all(color: AppColors.outlineVariant),
+            border: Border.all(color: context.outlineVariant),
           ),
           child: Row(
             children: [
-              const Icon(Icons.info_outline, color: AppColors.primary),
+              Icon(Icons.info_outline, color: context.primary),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -215,13 +215,13 @@ class _UploadCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLow,
+          color: context.surfaceContainerLow,
           borderRadius: BorderRadius.circular(AppColors.radiusMedium),
-          border: Border.all(color: AppColors.outlineVariant),
+          border: Border.all(color: context.outlineVariant),
         ),
         child: Row(
           children: [
-            const Icon(Icons.photo_camera_outlined, color: AppColors.primary),
+            Icon(Icons.photo_camera_outlined, color: context.primary),
             const SizedBox(width: 12),
             Text(label, style: Theme.of(context).textTheme.bodyMedium),
           ],
@@ -304,7 +304,7 @@ class _ReviewStep extends StatelessWidget {
           'Submitting will create a pending record for review.',
           style: Theme.of(
             context,
-          ).textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant),
+          ).textTheme.bodyMedium?.copyWith(color: context.onSurfaceVariant),
         ),
       ],
     );

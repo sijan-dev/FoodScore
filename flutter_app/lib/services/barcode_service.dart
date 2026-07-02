@@ -15,11 +15,6 @@ class BarcodeService {
     if (barcode.trim().isEmpty) {
       return null;
     }
-
-    try {
-      return await _repository.fetchProductByBarcode(barcode.trim());
-    } catch (_) {
-      return null;
-    }
+    return _repository.fetchProductByBarcode(barcode.trim());
   }
 }
