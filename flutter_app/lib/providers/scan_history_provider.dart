@@ -32,6 +32,12 @@ class ScanHistoryNotifier extends Notifier<List<ScanRecord>> {
     await _saveHistory();
   }
 
+  Future<void> clearHistory() async {
+    state = [];
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_historyKey);
+  }
+
   Future<void> _saveHistory() async {
     final prefs = await SharedPreferences.getInstance();
     final historyJson = state.map((item) => jsonEncode(item.toJson())).toList();

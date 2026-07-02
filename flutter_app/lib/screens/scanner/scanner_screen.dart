@@ -1,6 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart' hide Barcode;
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../app/tokens.dart';
 import '../../models/product.dart';
@@ -46,6 +51,55 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       if (!mounted) return;
       setState(() {
         _statusText = 'Scan failed. Try again.';
+        _isProcessing = false;
+      });
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
+    final status = await Permission.photos.request();
+    if (!status.isGranted) return;
+
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+
+    setState(() {
+      _statusText = 'Reading barcode...';
+      _isProcessing = true;
+    });
+
+    try {
+      final file = File(picked.path);
+      final inputImage = InputImage.fromFile(file);
+      final barcodeScanner = BarcodeScanner();
+      final barcodes = await barcodeScanner.processImage(inputImage);
+      await barcodeScanner.close();
+
+      if (barcodes.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _statusText = 'No barcode found in image.';
+          _isProcessing = false;
+        });
+        return;
+      }
+
+      final code = barcodes.first.rawValue;
+      if (code == null) {
+        if (!mounted) return;
+        setState(() {
+          _statusText = 'No barcode found in image.';
+          _isProcessing = false;
+        });
+        return;
+      }
+
+      await _handleBarcode(code);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _statusText = 'Failed to read image.';
         _isProcessing = false;
       });
     }
@@ -113,11 +167,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                 ),
                 const SizedBox(height: 24),
                 _GalleryButton(
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Gallery coming soon.')),
-                    );
-                  },
+                  onTap: _pickFromGallery,
                 ),
                 const SizedBox(height: 20),
               ],

@@ -74,7 +74,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.eco, size: 16, color: context.primary),
+                      ClipOval(
+                        child: Image.asset(
+                          'assets/images/android-chrome-192x192.png',
+                          width: 16,
+                          height: 16,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         'FoodScore',
@@ -112,15 +119,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       width: double.infinity,
                       height: 180,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          'assets/images/android-chrome-192x192.png',
-                          width: double.infinity,
-                          height: 180,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: double.infinity,
+                    height: 180,
+                    decoration: BoxDecoration(
+                      color: context.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Icon(Icons.image_outlined, size: 48, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
+                  ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -241,7 +248,15 @@ class _GoalBadge extends StatelessWidget {
               color: highlight.color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(highlight.icon, color: highlight.color, size: 18),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.asset(
+                'assets/images/android-chrome-192x192.png',
+                width: 18,
+                height: 18,
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Column(

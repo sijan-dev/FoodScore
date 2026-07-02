@@ -4,15 +4,60 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/tokens.dart';
 import '../../models/scan_record.dart';
 import '../../providers/scan_history_provider.dart';
+import '../placeholders/settings_screen.dart';
 import '../product/product_detail_screen.dart';
 
-class HistoryScreen extends ConsumerWidget {
+class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends ConsumerState<HistoryScreen> {
+  final _searchController = TextEditingController();
+  bool _showSearch = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _confirmClear() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear History'),
+        content: const Text('Delete all scan history? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              ref.read(scanHistoryProvider.notifier).clearHistory();
+            },
+            child: Text('Delete', style: TextStyle(color: context.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final history = ref.watch(scanHistoryProvider);
-    final grouped = _groupByDate(history);
+    final query = _searchController.text.trim().toLowerCase();
+    final filtered = query.isEmpty
+        ? history
+        : history.where((r) =>
+            r.product.name.toLowerCase().contains(query) ||
+            r.product.subtitle.toLowerCase().contains(query) ||
+            r.product.barcode.contains(query)).toList();
+    final grouped = _groupByDate(filtered);
 
     return Scaffold(
       backgroundColor: context.surface,
@@ -22,54 +67,105 @@ class HistoryScreen extends ConsumerWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: context.surfaceContainer,
-                  child: Icon(
-                    Icons.person_outline,
-                    color: context.onSurface,
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: context.primaryContainer.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/android-chrome-192x192.png',
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 12),
                 Text(
-                  'Scan History',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                  'FoodScore',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const Spacer(),
                 _IconButton(
                   icon: Icons.search,
+                  onTap: () => setState(() => _showSearch = !_showSearch),
+                ),
+                const SizedBox(width: 8),
+                _IconButton(
+                  icon: Icons.delete_outline,
+                  onTap: _confirmClear,
+                ),
+                const SizedBox(width: 8),
+                _IconButton(
+                  icon: Icons.person_outline,
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Search coming soon.')),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
                     );
                   },
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _StatCard(
-                    label: 'Total Scans',
-                    value: history.length.toString(),
-                    icon: Icons.qr_code_scanner,
+            if (_showSearch) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _searchController,
+                autofocus: true,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: 'Search by name, brand, or barcode...',
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {});
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: context.surfaceContainer,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _StatCard(
-                    label: 'Avg Score',
-                    value: _averageScore(history).toStringAsFixed(0),
-                    icon: Icons.eco,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
             const SizedBox(height: 20),
-            if (history.isEmpty)
+            if (!_showSearch) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: _StatCard(
+                      label: 'Total Scans',
+                      value: history.length.toString(),
+                      icon: Icons.qr_code_scanner,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _StatCard(
+                      label: 'Avg Score',
+                      value: _averageScore(filtered).toStringAsFixed(0),
+                      useLogo: true,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
+            if (filtered.isEmpty)
               _EmptyHistoryCard()
             else
               for (final entry in grouped.entries) ...[
@@ -173,12 +269,14 @@ class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.label,
     required this.value,
-    required this.icon,
+    this.icon,
+    this.useLogo = false,
   });
 
   final String label;
   final String value;
-  final IconData icon;
+  final IconData? icon;
+  final bool useLogo;
 
   @override
   Widget build(BuildContext context) {
@@ -197,7 +295,17 @@ class _StatCard extends StatelessWidget {
               color: context.primaryContainer.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: context.primary),
+            child: useLogo
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/images/android-chrome-192x192.png',
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Icon(icon, color: context.primary),
           ),
           const SizedBox(width: 10),
           Column(
@@ -273,8 +381,11 @@ class _HistoryCard extends StatelessWidget {
                 errorBuilder: (context, error, stackTrace) => Container(
                   width: 58,
                   height: 58,
-                  color: context.surfaceContainer,
-                  child: const Icon(Icons.image_not_supported),
+                  decoration: BoxDecoration(
+                    color: context.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(Icons.image_outlined, size: 24, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
                 ),
               ),
             ),
