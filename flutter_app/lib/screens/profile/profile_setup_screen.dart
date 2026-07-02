@@ -114,30 +114,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFDAF3E5), Color(0xFFF9F7F0)],
-              ),
-            ),
-          ),
-          Positioned(
-            top: -80,
-            right: -60,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                color: context.primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          SafeArea(
+      backgroundColor: context.surface,
+      body: SafeArea(
             child: _loading
                 ? const SizedBox(
                     height: 200,
@@ -297,8 +275,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                       ),
                     ],
                   ),
-          ),
-        ],
       ),
     );
   }

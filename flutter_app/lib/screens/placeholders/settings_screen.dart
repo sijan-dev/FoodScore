@@ -7,7 +7,6 @@ import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../profile/profile_setup_screen.dart';
 import '../settings/health_goals_screen.dart';
-import '../settings/language_screen.dart';
 import '../settings/privacy_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -120,15 +119,6 @@ class SettingsScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                    );
-                  },
-                ),
-                _SettingsTile(
-                  icon: Icons.language,
-                  label: 'Language',
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const LanguageScreen()),
                     );
                   },
                 ),
@@ -310,6 +300,8 @@ class _ProfileCard extends StatelessWidget {
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -317,6 +309,8 @@ class _ProfileCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: context.onSurfaceVariant,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

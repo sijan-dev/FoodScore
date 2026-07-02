@@ -40,14 +40,14 @@ class ProductHistoryCard extends StatelessWidget {
                   width: 72,
                   height: 72,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      'assets/images/android-chrome-192x192.png',
-                      width: 72,
-                      height: 72,
-                      fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: context.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(AppColors.radiusSmall),
                     ),
+                    child: Icon(Icons.image_outlined, size: 28, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
                   ),
                 ),
               ),

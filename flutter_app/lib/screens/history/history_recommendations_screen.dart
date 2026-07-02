@@ -44,7 +44,7 @@ class HistoryRecommendationsScreen extends ConsumerWidget {
                   child: _StatCard(
                     label: 'Weekly Score',
                     value: _averageScore(history).toStringAsFixed(0),
-                    icon: Icons.eco,
+                    useLogo: true,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -143,12 +143,14 @@ class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.label,
     required this.value,
-    required this.icon,
+    this.icon,
+    this.useLogo = false,
   });
 
   final String label;
   final String value;
-  final IconData icon;
+  final IconData? icon;
+  final bool useLogo;
 
   @override
   Widget build(BuildContext context) {
@@ -167,7 +169,17 @@ class _StatCard extends StatelessWidget {
               color: context.primaryContainer.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: context.primary),
+            child: useLogo
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/images/android-chrome-192x192.png',
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Icon(icon, color: context.primary),
           ),
           const SizedBox(width: 10),
           Column(
@@ -324,14 +336,14 @@ class _HistoryCard extends StatelessWidget {
                 width: 58,
                 height: 58,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    'assets/images/android-chrome-192x192.png',
-                    width: 58,
-                    height: 58,
-                    fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    color: context.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(14),
                   ),
+                  child: Icon(Icons.image_outlined, size: 24, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
                 ),
               ),
             ),

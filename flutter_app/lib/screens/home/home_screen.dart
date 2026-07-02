@@ -276,42 +276,52 @@ class _HeaderBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Stack(
       children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: context.primaryContainer.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
+        Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: context.primaryContainer.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/android-chrome-192x192.png',
+                    width: 44,
+                    height: 44,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'FoodScore',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
-          child: ClipOval(
-            child: Image.asset(
-              'assets/images/android-chrome-192x192.png',
-              width: 44,
-              height: 44,
-              fit: BoxFit.cover,
+        ),
+        Positioned(
+          right: 0,
+          top: 0,
+          child: InkWell(
+            onTap: onProfileTap,
+            borderRadius: BorderRadius.circular(24),
+            child: CircleAvatar(
+              radius: 22,
+              backgroundColor: context.surfaceContainer,
+              backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+              child: avatarUrl == null
+                  ? Icon(Icons.person_outline, color: context.onSurface)
+                  : null,
             ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          'FoodScore',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const Spacer(),
-        InkWell(
-          onTap: onProfileTap,
-          borderRadius: BorderRadius.circular(24),
-          child: CircleAvatar(
-            radius: 22,
-            backgroundColor: context.surfaceContainer,
-            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-            child: avatarUrl == null
-                ? Icon(Icons.person_outline, color: context.onSurface)
-                : null,
           ),
         ),
       ],
@@ -525,14 +535,14 @@ class _SearchResultsSection extends StatelessWidget {
                         width: 52,
                         height: 52,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            'assets/images/android-chrome-192x192.png',
-                            width: 52,
-                            height: 52,
-                            fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: context.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(12),
                           ),
+                          child: Icon(Icons.image_outlined, size: 22, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
                         ),
                       ),
                     ),
@@ -654,14 +664,14 @@ class _RecentScanCard extends StatelessWidget {
                 width: 64,
                 height: 64,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    'assets/images/android-chrome-192x192.png',
-                    width: 64,
-                    height: 64,
-                    fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: context.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(14),
                   ),
+                  child: Icon(Icons.image_outlined, size: 26, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
                 ),
               ),
             ),
