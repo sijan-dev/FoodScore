@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 import json
+from app.ml.scorer import predict_nutriscore
 
 TIER_PENALTIES = {
     "harmful": 100,
@@ -90,7 +91,10 @@ def compute_score(product_id: str, db: Session) -> dict:
     nova_mod = {1: 5, 2: 0, 3: -5, 4: -10}
     score += nova_mod.get(nova_group, 0)
 
-    # Nutri-Score modifier
+    # Nutri-Score modifier — use ML prediction if not available
+    if not nutri_score and nutriments:
+        nutri_score = predict_nutriscore(nutriments)
+
     nutri_mod = {"A": 5, "B": 3, "C": 0, "D": -5, "E": -10}
     score += nutri_mod.get(nutri_score, 0)
 
