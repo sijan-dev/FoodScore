@@ -22,6 +22,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   String _bloodType = 'O+';
   bool _loading = true;
   bool _saving = false;
+  String? _avatarUrl;
 
   static const _kName = 'profile_name';
   static const _kAge = 'profile_age';
@@ -49,7 +50,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   Future<void> _loadSaved() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _nameController.text = prefs.getString(_kName) ?? '';
+      final savedName = prefs.getString(_kName);
+      final authState = ref.read(authProvider);
+      _nameController.text = savedName ?? authState.user?.displayName ?? '';
+      _avatarUrl = authState.user?.avatarUrl;
       final age = prefs.getInt(_kAge);
       if (age != null) _ageController.text = age.toString();
       final weight = prefs.getDouble(_kWeight);
@@ -128,7 +132,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
+                color: context.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
             ),
@@ -164,7 +168,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                       Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceContainerLowest,
+                          color: context.surfaceContainerLowest,
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
@@ -179,6 +183,19 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Center(
+                                child: CircleAvatar(
+                                  radius: 40,
+                                  backgroundColor: context.primaryContainer.withValues(alpha: 0.2),
+                                  backgroundImage: _avatarUrl != null
+                                      ? NetworkImage(_avatarUrl!)
+                                      : null,
+                                  child: _avatarUrl == null
+                                      ? Icon(Icons.person, size: 40, color: context.primary)
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
                               Text(
                                 'Tell us about you',
                                 style: Theme.of(context)
@@ -302,10 +319,10 @@ class _IconButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: context.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Icon(icon, color: AppColors.onSurface),
+        child: Icon(icon, color: context.onSurface),
       ),
     );
   }
@@ -336,7 +353,7 @@ class _InputField extends StatelessWidget {
         hintText: hint,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: AppColors.surfaceContainer,
+        fillColor: context.surfaceContainer,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -373,7 +390,7 @@ class _DropdownField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: AppColors.surfaceContainer,
+        fillColor: context.surfaceContainer,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,

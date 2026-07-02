@@ -8,14 +8,14 @@ class InsightsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       body: SafeArea(
         child: Center(
           child: Text(
             'Insights coming soon',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.onSurfaceVariant,
+              color: context.onSurfaceVariant,
             ),
           ),
         ),

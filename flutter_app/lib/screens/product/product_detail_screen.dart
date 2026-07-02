@@ -1,23 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/tokens.dart';
 import '../../models/product.dart';
+import '../../utils/goal_highlighter.dart';
 import 'similar_products_screen.dart';
 
-class ProductDetailScreen extends StatelessWidget {
+class ProductDetailScreen extends ConsumerStatefulWidget {
   const ProductDetailScreen({super.key, required this.product});
 
   final Product product;
 
   @override
+  ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
+  List<String> _goals = [];
+  bool _goalsLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGoals();
+  }
+
+  Future<void> _loadGoals() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _goals = prefs.getStringList('health_goals') ?? [];
+      _goalsLoaded = true;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final product = widget.product;
     final tags = <String>{
       if ((product.category ?? '').isNotEmpty) product.category!,
       if (product.subtitle.isNotEmpty) product.subtitle,
     }.toList();
 
+    final hls = _goalsLoaded ? GoalHighlighter.highlights(product, _goals) : <GoalHighlight>[];
+    final scoreAdj = _goalsLoaded ? GoalHighlighter.scoreAdjustment(product, _goals) : 0;
+    final adjustedScore = (product.score + scoreAdj).clamp(0, 100);
+    final prioritizedInsights = _goalsLoaded
+        ? GoalHighlighter.prioritizeInsights(product, _goals, product.insights)
+        : product.insights;
+
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
@@ -35,12 +69,12 @@ class ProductDetailScreen extends StatelessWidget {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceContainer,
+                    color: context.surfaceContainer,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.eco, size: 16, color: AppColors.primary),
+                      Icon(Icons.eco, size: 16, color: context.primary),
                       const SizedBox(width: 6),
                       Text(
                         'FoodScore',
@@ -59,7 +93,7 @@ class ProductDetailScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLowest,
+                color: context.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
@@ -78,11 +112,14 @@ class ProductDetailScreen extends StatelessWidget {
                       width: double.infinity,
                       height: 180,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        height: 180,
-                        color: AppColors.surfaceContainer,
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.image_not_supported),
+                      errorBuilder: (context, error, stackTrace) => ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          'assets/images/android-chrome-192x192.png',
+                          width: double.infinity,
+                          height: 180,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
@@ -107,21 +144,33 @@ class ProductDetailScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _ScoreRingLarge(score: product.score),
+                      _ScoreRingLarge(score: adjustedScore),
                       const SizedBox(width: 16),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${product.score}/100',
+                            '$adjustedScore/100',
                             style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
+                          if (scoreAdj != 0 && _goalsLoaded) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              scoreAdj > 0
+                                  ? '+$scoreAdj from goals'
+                                  : '$scoreAdj from goals',
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: scoreAdj > 0 ? AppColors.good : AppColors.error,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 4),
                           Text(
-                            _scoreLabel(product.score),
+                            _scoreLabel(adjustedScore),
                             style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: AppColors.onSurfaceVariant),
+                                ?.copyWith(color: context.onSurfaceVariant),
                           ),
                         ],
                       ),
@@ -130,22 +179,28 @@ class ProductDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            if (hls.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              _SectionTitle(title: 'Your Goals'),
+              const SizedBox(height: 10),
+              ...hls.map((hl) => _GoalBadge(highlight: hl)),
+            ],
+            const SizedBox(height: 18),
             _SectionTitle(title: 'Nutrition Score'),
             const SizedBox(height: 10),
             _NutriScoreCard(score: product.nutriScore),
             const SizedBox(height: 18),
             _SectionTitle(title: 'Health Impact'),
             const SizedBox(height: 10),
-            _HealthImpactList(insights: product.insights),
+            _HealthImpactList(insights: prioritizedInsights),
             const SizedBox(height: 18),
             _SectionTitle(title: 'Ingredients Analysis'),
             const SizedBox(height: 10),
             _IngredientsList(product: product),
             const SizedBox(height: 18),
             _InsightCard(
-              text: product.insights.isNotEmpty
-                  ? product.insights.first
+              text: prioritizedInsights.isNotEmpty
+                  ? prioritizedInsights.first
                   : 'Balanced macros with moderate sugar. Best for occasional use.',
               onTap: () {
                 Navigator.of(context).push(
@@ -157,6 +212,58 @@ class ProductDetailScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GoalBadge extends StatelessWidget {
+  const _GoalBadge({required this.highlight});
+
+  final GoalHighlight highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: highlight.color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: highlight.color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: highlight.color.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(highlight.icon, color: highlight.color, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                highlight.badge,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: highlight.color,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                highlight.description,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -177,10 +284,10 @@ class _IconButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainer,
+          color: context.surfaceContainer,
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Icon(icon, color: AppColors.onSurface),
+        child: Icon(icon, color: context.onSurface),
       ),
     );
   }
@@ -196,13 +303,13 @@ class _TagChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer.withValues(alpha: 0.18),
+        color: context.primaryContainer.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: AppColors.primary,
+          color: context.primary,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -229,7 +336,7 @@ class _ScoreRingLarge extends StatelessWidget {
           child: CircularProgressIndicator(
             value: score / 100,
             strokeWidth: 8,
-            backgroundColor: AppColors.surfaceContainerHighest,
+            backgroundColor: context.surfaceContainerHighest,
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),
@@ -272,7 +379,7 @@ class _NutriScoreCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -280,7 +387,7 @@ class _NutriScoreCard extends StatelessWidget {
           Text(
             'NUTRI-SCORE',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: context.onSurfaceVariant,
                   letterSpacing: 1.2,
                 ),
           ),
@@ -327,8 +434,6 @@ class _NutriScoreCard extends StatelessWidget {
     );
   }
 }
-
-// _NutriScorePill was removed; kept _nutriColor helper instead.
 
 Color _nutriColor(String letter) {
   switch (letter.toUpperCase()) {
@@ -382,7 +487,7 @@ class _HealthImpactItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
@@ -465,7 +570,7 @@ class _IngredientRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         border: Border(left: BorderSide(color: color, width: 4)),
       ),
@@ -512,8 +617,8 @@ class _InsightCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primaryContainer.withValues(alpha: 0.2),
-            AppColors.surfaceContainerLowest,
+            context.primaryContainer.withValues(alpha: 0.2),
+            context.surfaceContainerLowest,
           ],
         ),
         borderRadius: BorderRadius.circular(20),
@@ -527,12 +632,12 @@ class _InsightCard extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryContainer,
+                  color: context.primaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.auto_awesome,
-                  color: AppColors.onPrimary,
+                  color: context.onPrimary,
                 ),
               ),
               const SizedBox(width: 10),
@@ -549,7 +654,7 @@ class _InsightCard extends StatelessWidget {
             text,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+            ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(

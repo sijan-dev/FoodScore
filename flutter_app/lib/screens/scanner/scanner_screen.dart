@@ -188,10 +188,10 @@ class _ScannerFrame extends StatelessWidget {
                 height: 2,
                 margin: const EdgeInsets.symmetric(horizontal: 24),
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  color: context.primary,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.7),
+                      color: context.primary.withValues(alpha: 0.7),
                       blurRadius: 12,
                     ),
                   ],

@@ -18,7 +18,7 @@ class PrototypeScreen extends StatelessWidget {
     final sampleProduct = _sampleProduct();
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       appBar: AppBar(title: const Text('Prototype Flow')),
       body: SafeArea(
         child: ListView(
@@ -34,7 +34,7 @@ class PrototypeScreen extends StatelessWidget {
             Text(
               'Use this hub to preview the implemented UI screens.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: context.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 16),
@@ -126,7 +126,7 @@ class _NavCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: AppColors.surfaceContainerLow,
+        color: context.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppColors.radiusMedium),
         child: InkWell(
           borderRadius: BorderRadius.circular(AppColors.radiusMedium),
@@ -135,11 +135,11 @@ class _NavCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppColors.radiusMedium),
-              border: Border.all(color: AppColors.outlineVariant),
+              border: Border.all(color: context.outlineVariant),
             ),
             child: Row(
               children: [
-                const Icon(Icons.arrow_forward, color: AppColors.primary),
+                Icon(Icons.arrow_forward, color: context.primary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -154,7 +154,7 @@ class _NavCard extends StatelessWidget {
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                          color: context.onSurfaceVariant,
                         ),
                       ),
                     ],

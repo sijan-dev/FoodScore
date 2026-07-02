@@ -81,12 +81,12 @@ class OpenFoodFactsDataSource {
 
     final imageUrl =
         (productJson['image_front_small_url'] as String?)?.trim().isNotEmpty ==
-            true
-        ? (productJson['image_front_small_url'] as String).trim()
-        : ((productJson['image_front_url'] as String?)?.trim().isNotEmpty ==
-                  true
-              ? (productJson['image_front_url'] as String).trim()
-              : 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800&q=80');
+                true
+            ? (productJson['image_front_small_url'] as String).trim()
+            : (productJson['image_front_url'] as String?)?.trim().isNotEmpty ==
+                    true
+                ? (productJson['image_front_url'] as String).trim()
+                : _extractSelectedImage(productJson) ?? '';
 
     final category = (productJson['categories'] as String?)
         ?.split(',')
@@ -107,6 +107,8 @@ class OpenFoodFactsDataSource {
       sugarG: _numToInt(nutriments['sugars_100g']),
       fiberG: _numToInt(nutriments['fiber_100g']),
       fatG: _numToInt(nutriments['fat_100g']),
+      proteinG: _numToInt(nutriments['proteins_100g']),
+      sodiumG: _numToInt(nutriments['sodium_100g']),
     );
 
     final nutriScore = ((productJson['nutriscore_grade'] as String?) ?? 'c')
@@ -146,6 +148,28 @@ class OpenFoodFactsDataSource {
       trafficLabel: _trafficLabel(score),
       source: 'openfoodfacts',
     );
+  }
+
+  String? _extractSelectedImage(Map<String, dynamic> productJson) {
+    final selected =
+        productJson['selected_images'] as Map<String, dynamic>?;
+    if (selected == null) return null;
+
+    for (final type in ['front', 'nutrition', 'ingredients']) {
+      final images = selected[type] as Map<String, dynamic>?;
+      if (images == null) continue;
+
+      for (final size in ['small', 'display']) {
+        final sized = images[size] as Map<String, dynamic>?;
+        if (sized == null) continue;
+
+        for (final key in ['en', '']) {
+          final url = sized[key] as String?;
+          if (url != null && url.trim().isNotEmpty) return url.trim();
+        }
+      }
+    }
+    return null;
   }
 
   int _numToInt(dynamic value) {

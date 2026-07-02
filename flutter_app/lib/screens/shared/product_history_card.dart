@@ -18,7 +18,7 @@ class ProductHistoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surfaceContainerLow,
+      color: context.surfaceContainerLow,
       borderRadius: BorderRadius.circular(AppColors.radiusMedium),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppColors.radiusMedium),
@@ -28,7 +28,7 @@ class ProductHistoryCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppColors.radiusMedium),
             border: Border.all(
-              color: AppColors.outlineVariant.withValues(alpha: 0.55),
+              color: context.outlineVariant.withValues(alpha: 0.55),
             ),
           ),
           child: Row(
@@ -40,6 +40,15 @@ class ProductHistoryCard extends StatelessWidget {
                   width: 72,
                   height: 72,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/images/android-chrome-192x192.png',
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -61,7 +70,7 @@ class ProductHistoryCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                        color: context.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -81,8 +90,8 @@ class ProductHistoryCard extends StatelessWidget {
                         ),
                         _ScoreBadge(
                           label: 'ECO ${product.ecoScore}',
-                          background: _ecoBackground(product.ecoScore),
-                          foreground: _ecoForeground(product.ecoScore),
+                          background: _ecoBackground(product.ecoScore, context),
+                          foreground: _ecoForeground(product.ecoScore, context),
                         ),
                       ],
                     ),
@@ -93,7 +102,7 @@ class ProductHistoryCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                          color: context.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -137,7 +146,7 @@ class ProductHistoryCard extends StatelessWidget {
     }
   }
 
-  Color _ecoBackground(String value) {
+  Color _ecoBackground(String value, BuildContext context) {
     switch (value.toUpperCase()) {
       case 'A':
       case 'B':
@@ -148,11 +157,11 @@ class ProductHistoryCard extends StatelessWidget {
       case 'E':
         return const Color(0xFFFFE3D8);
       default:
-        return AppColors.surfaceContainer;
+        return context.surfaceContainer;
     }
   }
 
-  Color _ecoForeground(String value) {
+  Color _ecoForeground(String value, BuildContext context) {
     switch (value.toUpperCase()) {
       case 'A':
       case 'B':
@@ -163,7 +172,7 @@ class ProductHistoryCard extends StatelessWidget {
       case 'E':
         return AppColors.additiveHigh;
       default:
-        return AppColors.onSurface;
+        return context.onSurface;
     }
   }
 }

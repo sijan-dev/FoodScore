@@ -15,11 +15,6 @@ class SearchService {
     if (query.trim().isEmpty) {
       return <Product>[];
     }
-
-    try {
-      return await _repository.searchProducts(query.trim(), limit: limit);
-    } catch (_) {
-      return <Product>[];
-    }
+    return _repository.searchProducts(query.trim(), limit: limit);
   }
 }

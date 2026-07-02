@@ -62,8 +62,7 @@ class AuthNotifier extends Notifier<AuthState> {
     }
 
     try {
-      final dataSource = ref.read(authDataSourceProvider);
-      final userData = await dataSource.getMe(token);
+      final userData = await apiClient.getMe();
       state = AuthState(
         status: AuthStatus.authenticated,
         user: UserProfile.fromJson(userData),
@@ -92,7 +91,7 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       state = AuthState(
         status: AuthStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: _friendlyError(e),
       );
     }
   }
@@ -111,7 +110,7 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       state = AuthState(
         status: AuthStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: _friendlyError(e),
       );
     }
   }
@@ -130,17 +129,28 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       state = AuthState(
         status: AuthStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: _friendlyError(e),
       );
     }
   }
 
   Future<void> signOut() async {
+    state = const AuthState(status: AuthStatus.unauthenticated);
     final authService = ref.read(authServiceProvider);
     final apiClient = ref.read(apiClientProvider);
     await authService.signOut();
     await apiClient.clearTokens();
-    state = const AuthState(status: AuthStatus.unauthenticated);
+  }
+
+  String _friendlyError(Object e) {
+    final msg = e.toString();
+    if (msg.contains('SocketException') || msg.contains('HandshakeException')) {
+      return 'Network error. Check your connection and try again.';
+    }
+    if (msg.contains('timeout') || msg.contains('TimeoutException')) {
+      return 'Request timed out. Please try again.';
+    }
+    return msg;
   }
 
   void clearError() {

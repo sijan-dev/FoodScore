@@ -83,6 +83,14 @@ class ApiClient {
     return response;
   }
 
+  Future<Map<String, dynamic>> getMe() async {
+    final response = await get('/auth/me');
+    if (response.statusCode != 200) {
+      throw Exception('Failed to fetch user profile');
+    }
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
   Future<bool> _tryRefresh() async {
     final rt = await _storage.read(key: _refreshTokenKey);
     if (rt == null) return false;

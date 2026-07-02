@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
+  // Light
   static const Color primary = Color(0xFF2E7D32);
   static const Color primaryContainer = Color(0xFF2E7D32);
   static const Color secondary = Color(0xFF286B33);
@@ -37,7 +38,55 @@ class AppColors {
   static const Color additiveHigh = Color(0xFFF57C00);
   static const Color additiveMedium = Color(0xFFFBC02D);
   static const Color additiveLow = Color(0xFF388E3C);
+
+  // Dark — true black base
+  static const Color darkPrimary = Color(0xFF4CAF50);
+  static const Color darkPrimaryContainer = Color(0xFF1B5E20);
+  static const Color darkSecondary = Color(0xFF66BB6A);
+  static const Color darkSecondaryContainer = Color(0xFF1B5E20);
+  static const Color darkTertiary = Color(0xFF81C784);
+  static const Color darkTertiaryContainer = Color(0xFF2E7D32);
+  static const Color darkSurface = Color(0xFF000000);
+  static const Color darkSurfaceContainerLowest = Color(0xFF0A0A0A);
+  static const Color darkSurfaceContainerLow = Color(0xFF111111);
+  static const Color darkSurfaceContainer = Color(0xFF1A1A1A);
+  static const Color darkSurfaceContainerHigh = Color(0xFF222222);
+  static const Color darkSurfaceContainerHighest = Color(0xFF2A2A2A);
+  static const Color darkSurfaceDim = Color(0xFF000000);
+  static const Color darkSurfaceVariant = Color(0xFF222222);
+  static const Color darkOnSurface = Color(0xFFE6E6E6);
+  static const Color darkOnSurfaceVariant = Color(0xFFB0B0B0);
+  static const Color darkOnPrimary = Color(0xFFFFFFFF);
+  static const Color darkOnSecondary = Color(0xFFFFFFFF);
+  static const Color darkOnTertiary = Color(0xFFFFFFFF);
+  static const Color darkError = Color(0xFFEF5350);
+  static const Color darkOutline = Color(0xFF555555);
+  static const Color darkOutlineVariant = Color(0xFF333333);
+  static const Color darkShadow = Color(0xFF000000);
+  static const Color darkPrimaryFixed = Color(0xFFA5D6A7);
+  static const Color darkPrimaryFixedDim = Color(0xFF388E3C);
+
   static const double radiusSmall = 8;
   static const double radiusMedium = 12;
   static const double radiusLarge = 24;
+}
+
+extension ThemeColors on BuildContext {
+  Color get surface => Theme.of(this).colorScheme.surface;
+  Color get surfaceContainerLowest => Theme.of(this).colorScheme.surfaceContainerLowest;
+  Color get surfaceContainerLow => Theme.of(this).colorScheme.surfaceContainerLow;
+  Color get surfaceContainer => Theme.of(this).colorScheme.surfaceContainer;
+  Color get surfaceContainerHigh => Theme.of(this).colorScheme.surfaceContainerHigh;
+  Color get surfaceContainerHighest => Theme.of(this).colorScheme.surfaceContainerHighest;
+  Color get onSurface => Theme.of(this).colorScheme.onSurface;
+  Color get onSurfaceVariant => Theme.of(this).colorScheme.onSurfaceVariant;
+  Color get surfaceVariant => Theme.of(this).colorScheme.surfaceContainerHighest;
+  Color get surfaceDim => Theme.of(this).colorScheme.surfaceDim;
+  Color get outline => Theme.of(this).colorScheme.outline;
+  Color get outlineVariant => Theme.of(this).colorScheme.outlineVariant;
+  Color get primary => Theme.of(this).colorScheme.primary;
+  Color get onPrimary => Theme.of(this).colorScheme.onPrimary;
+  Color get secondary => Theme.of(this).colorScheme.secondary;
+  Color get error => Theme.of(this).colorScheme.error;
+  Color get primaryContainer => Theme.of(this).colorScheme.primaryContainer;
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../app/tokens.dart';
 
 class ScanPage extends StatelessWidget {
@@ -15,10 +17,14 @@ class ScanPage extends StatelessWidget {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: AppColors.primaryContainer.withValues(alpha: 0.15),
+              color: context.primaryContainer.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(30),
             ),
-            child: Icon(Icons.qr_code_scanner, size: 64, color: AppColors.primary),
+            child: Icon(Icons.qr_code_scanner, size: 64, color: context.primary),
+          ).animate().fadeIn(duration: 500.ms).scaleXY(
+            begin: 0,
+            end: 1,
+            curve: Curves.easeOutBack,
           ),
           const SizedBox(height: 32),
           Text(
@@ -26,17 +32,25 @@ class ScanPage extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w800,
-              color: AppColors.primary,
+              color: context.primary,
             ),
+          ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(
+            begin: 0.3,
+            end: 0,
+            curve: Curves.easeOutCubic,
           ),
           const SizedBox(height: 16),
           Text(
             'Use your camera to scan any product barcode.\nGet instant health scores and nutritional insights.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: context.onSurfaceVariant,
               height: 1.5,
             ),
+          ).animate().fadeIn(duration: 400.ms, delay: 400.ms).slideY(
+            begin: 0.3,
+            end: 0,
+            curve: Curves.easeOutCubic,
           ),
         ],
       ),

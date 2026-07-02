@@ -42,7 +42,7 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: context.surfaceContainerLowest,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -62,7 +62,7 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
             Text(
               'You can help by contributing product photos.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: context.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 16),
@@ -80,8 +80,8 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
                 icon: const Icon(Icons.add_photo_alternate_outlined),
                 label: const Text('Contribute Product'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
+                  backgroundColor: context.primary,
+                  foregroundColor: context.onPrimary,
                 ),
               ),
             ),
@@ -104,7 +104,7 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
@@ -130,7 +130,7 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
             Text(
               'Barcode: ${widget.barcode}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: context.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -182,10 +182,10 @@ class _IconButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainer,
+          color: context.surfaceContainer,
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Icon(icon, color: AppColors.onSurface),
+        child: Icon(icon, color: context.onSurface),
       ),
     );
   }
@@ -201,7 +201,7 @@ class _EmptyResultsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -218,7 +218,7 @@ class _EmptyResultsCard extends StatelessWidget {
             'Help grow the database by contributing photos of this product.',
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+            ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
@@ -226,8 +226,8 @@ class _EmptyResultsCard extends StatelessWidget {
             icon: const Icon(Icons.add_photo_alternate_outlined),
             label: const Text('Contribute Product'),
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.onPrimary,
+              backgroundColor: context.primary,
+              foregroundColor: context.onPrimary,
             ),
           ),
         ],
