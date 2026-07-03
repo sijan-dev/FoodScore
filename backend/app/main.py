@@ -10,6 +10,7 @@ if str(_backend_dir) not in sys.path:
     sys.path.insert(0, str(_backend_dir))
 
 from fastapi import FastAPI, Request, Depends
+from fastapi.openapi.docs import get_redoc_html
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -20,8 +21,26 @@ from app.database import engine, Base, get_db
 from app.models import product, nutrition, score, user
 from app.api import products, score as score_router, search, auth
 from app.api import scan
-app = FastAPI(title="FoodScore API", version="1.0.0")
+app = FastAPI(
+    title="FoodScore API",
+    version="1.0.0",
+    redoc_url=None,   # Disable the built-in ReDoc
+)
+@app.get("/redoc", include_in_schema=False)
+async def custom_redoc():
+    return get_redoc_html(
+        openapi_url=app.openapi_url,
+        title="FoodScore API - ReDoc",
+        redoc_js_url="https://cdn.jsdelivr.net/npm/redoc@2.1.5/bundles/redoc.standalone.js",
+    )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(","),
