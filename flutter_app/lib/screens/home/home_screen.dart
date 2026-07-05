@@ -8,6 +8,7 @@ import '../../models/product.dart';
 import '../../models/scan_record.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/scan_history_provider.dart';
+import '../shared/loading_widget.dart';
 import '../../services/search_service.dart';
 import '../contribution/contribute_barcode_upload_screen.dart';
 import '../placeholders/settings_screen.dart';
@@ -117,9 +118,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: 8),
             Text(
               'Help us grow the database by contributing this product.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: context.onSurfaceVariant,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -163,6 +164,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           );
         },
+        tooltip: 'Add product',
         backgroundColor: context.primaryContainer,
         foregroundColor: context.onPrimary,
         child: const Icon(Icons.add_rounded),
@@ -228,11 +230,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'Recent Scans',
               actionLabel: 'View All',
               onAction: () {
-                AppRouter.goToHistory();
+                AppRouter.goToHistory(ref);
               },
             ),
             const SizedBox(height: 12),
-            if (recentScans.isEmpty)
+            if (ref.watch(scanHistoryLoadingProvider))
+              const SizedBox(
+                height: 120,
+                child: LoadingWidget(message: 'Loading scan history...'),
+              )
+            else if (recentScans.isEmpty)
               _EmptyStateCard(
                 title: 'Nothing scanned yet',
                 subtitle: 'Scan your first product to see scores here.',
@@ -266,10 +273,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 class _HeaderBar extends StatelessWidget {
-  const _HeaderBar({
-    required this.onProfileTap,
-    this.avatarUrl,
-  });
+  const _HeaderBar({required this.onProfileTap, this.avatarUrl});
 
   final VoidCallback onProfileTap;
   final String? avatarUrl;
@@ -301,9 +305,9 @@ class _HeaderBar extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 'FoodScore',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
             ],
           ),
@@ -317,7 +321,9 @@ class _HeaderBar extends StatelessWidget {
             child: CircleAvatar(
               radius: 22,
               backgroundColor: context.surfaceContainer,
-              backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+              backgroundImage: avatarUrl != null
+                  ? NetworkImage(avatarUrl!)
+                  : null,
               child: avatarUrl == null
                   ? Icon(Icons.person_outline, color: context.onSurface)
                   : null,
@@ -542,7 +548,13 @@ class _SearchResultsSection extends StatelessWidget {
                             color: context.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(Icons.image_outlined, size: 22, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
+                          child: Icon(
+                            Icons.image_outlined,
+                            size: 22,
+                            color: context.onSurfaceVariant.withValues(
+                              alpha: 0.4,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -671,7 +683,11 @@ class _RecentScanCard extends StatelessWidget {
                     color: context.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(Icons.image_outlined, size: 26, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
+                  child: Icon(
+                    Icons.image_outlined,
+                    size: 26,
+                    color: context.onSurfaceVariant.withValues(alpha: 0.4),
+                  ),
                 ),
               ),
             ),
