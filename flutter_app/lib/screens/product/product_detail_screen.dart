@@ -6,6 +6,7 @@ import '../../app/tokens.dart';
 import '../../models/product.dart';
 import '../../utils/goal_highlighter.dart';
 import '../shared/app_icon_button.dart';
+import '../shared/loading_widget.dart';
 import 'similar_products_screen.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
@@ -206,7 +207,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 ],
               ),
             ),
-            if (hls.isNotEmpty) ...[
+            if (!_goalsLoaded) ...[
+              const SizedBox(height: 18),
+              _SectionTitle(title: 'Your Goals'),
+              const SizedBox(height: 10),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: LoadingWidget(),
+              ),
+            ] else if (hls.isNotEmpty) ...[
               const SizedBox(height: 18),
               _SectionTitle(title: 'Your Goals'),
               const SizedBox(height: 10),
