@@ -7,6 +7,7 @@ import '../../models/scan_record.dart';
 import '../../providers/scan_history_provider.dart';
 import '../contribution/contribute_barcode_upload_screen.dart';
 import '../product/product_detail_screen.dart';
+import '../shared/app_icon_button.dart';
 import '../shared/product_history_card.dart';
 
 class ScanResultsScreen extends ConsumerStatefulWidget {
@@ -42,7 +43,7 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: context.surfaceContainerLowest,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -61,9 +62,9 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
             const SizedBox(height: 8),
             Text(
               'You can help by contributing product photos.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.onSurfaceVariant,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -80,8 +81,8 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
                 icon: const Icon(Icons.add_photo_alternate_outlined),
                 label: const Text('Contribute Product'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
+                  backgroundColor: context.primary,
+                  foregroundColor: context.onPrimary,
                 ),
               ),
             ),
@@ -104,16 +105,17 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
             Row(
               children: [
-                _IconButton(
+                AppIconButton(
                   icon: Icons.arrow_back,
                   onTap: () => Navigator.of(context).pop(),
+                  semanticLabel: 'Go back',
                 ),
                 const Spacer(),
                 Text(
@@ -130,7 +132,7 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
             Text(
               'Barcode: ${widget.barcode}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: context.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -167,30 +169,6 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
   }
 }
 
-class _IconButton extends StatelessWidget {
-  const _IconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainer,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: AppColors.onSurface),
-      ),
-    );
-  }
-}
-
 class _EmptyResultsCard extends StatelessWidget {
   const _EmptyResultsCard({required this.onContribute});
 
@@ -201,7 +179,7 @@ class _EmptyResultsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -218,7 +196,7 @@ class _EmptyResultsCard extends StatelessWidget {
             'Help grow the database by contributing photos of this product.',
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+            ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
@@ -226,8 +204,8 @@ class _EmptyResultsCard extends StatelessWidget {
             icon: const Icon(Icons.add_photo_alternate_outlined),
             label: const Text('Contribute Product'),
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.onPrimary,
+              backgroundColor: context.primary,
+              foregroundColor: context.onPrimary,
             ),
           ),
         ],

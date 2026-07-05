@@ -2,7 +2,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 import '../data/auth_data_source.dart';
 
-const _googleClientId = '345865041596-4fu1h7sqh8cg8nr1or8ogtjjoorv235e.apps.googleusercontent.com';
+const _googleClientId =
+    '345865041596-4fu1h7sqh8cg8nr1or8ogtjjoorv235e.apps.googleusercontent.com';
 
 class UserProfile {
   final String userId;
@@ -88,7 +89,11 @@ class AuthService {
     );
   }
 
-  Future<AuthResult> register(String username, String email, String password) async {
+  Future<AuthResult> register(
+    String username,
+    String email,
+    String password,
+  ) async {
     final tokenData = await _dataSource.register(username, email, password);
 
     return AuthResult(

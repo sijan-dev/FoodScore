@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 import json
+from app.ml.scorer import predict_nutriscore
 
 TIER_PENALTIES = {
     "harmful": 100,
@@ -27,20 +28,32 @@ def get_traffic_light(score: int, is_harmful: bool) -> dict:
     else:
         return {"color": "green", "label": "Good"}
 
+def generate_suggestion(score: int, is_harmful: bool, flagged: list) -> str:
+    if is_harmful:
+        return "This product contains harmful additives. Avoid consumption."
+    elif score >= 80:
+        return "This product has a good nutritional profile. Safe to consume regularly."
+    elif score >= 60:
+        return "This product is moderate. Consume in limited quantities."
+    elif score >= 40:
+        return "This product has poor nutritional value. Consider healthier alternatives."
+    else:
+        return "This product is not recommended. Look for better alternatives."
+
 def compute_score(product_id: str, db: Session) -> dict:
     row = db.execute(text("""
         SELECT additives, nutriments, nova_group, nutri_score
         FROM products WHERE product_id = :pid
     """), {"pid": product_id}).fetchone()
-    
+
     if not row:
         return {"error": "Product not found"}
-    
+
     additives, nutriments, nova_group, nutri_score = row
     score = 100
     is_harmful = False
     flagged = []
-    
+
     # Check additives against reference table
     if additives and len(additives) > 0:
         additive_rows = db.execute(text("""
@@ -48,7 +61,7 @@ def compute_score(product_id: str, db: Session) -> dict:
             FROM additive_reference
             WHERE e_number = ANY(:additives)
         """), {"additives": additives}).fetchall()
-        
+
         for e_num, name, tier, banned in additive_rows:
             if banned or tier == "harmful":
                 is_harmful = True
@@ -59,7 +72,7 @@ def compute_score(product_id: str, db: Session) -> dict:
                 penalty = TIER_PENALTIES.get(tier, 0)
                 score -= penalty
                 flagged.append({"e_number": e_num, "name": name, "risk": tier, "penalty": penalty})
-    
+
     # Check nutriments if not already harmful
     if not is_harmful and nutriments:
         nut_data = nutriments or {}
@@ -73,36 +86,57 @@ def compute_score(product_id: str, db: Session) -> dict:
             else:
                 if value >= medium:
                     score += abs(penalty)
-    
+
     # NOVA modifier
     nova_mod = {1: 5, 2: 0, 3: -5, 4: -10}
     score += nova_mod.get(nova_group, 0)
-    
-    # Nutri-Score modifier
+
+    # Nutri-Score modifier — use ML prediction if not available
+    ml_predicted_nutriscore = None
+    if not nutri_score and nutriments:
+       nutri_score = predict_nutriscore(nutriments)
+    ml_predicted_nutriscore = nutri_score
+
     nutri_mod = {"A": 5, "B": 3, "C": 0, "D": -5, "E": -10}
     score += nutri_mod.get(nutri_score, 0)
-    
+
     # Clamp
     score = max(0, min(100, score))
-    
+
     # Save score to DB
-    db.execute(text("""
-        UPDATE products
-        SET health_score = :score, is_harmful = :harmful, updated_at = NOW()
-        WHERE product_id = :pid
-    """), {"score": score, "harmful": is_harmful, "pid": product_id})
-    
+    if ml_predicted_nutriscore:
+        db.execute(text("""
+            UPDATE products
+            SET health_score = :score, is_harmful = :harmful, 
+                nutri_score = :nutri, updated_at = NOW()
+            WHERE product_id = :pid
+        """), {"score": score, "harmful": is_harmful, "nutri": ml_predicted_nutriscore, "pid": product_id})
+    else:
+        db.execute(text("""
+            UPDATE products
+            SET health_score = :score, is_harmful = :harmful, updated_at = NOW()
+            WHERE product_id = :pid
+        """), {"score": score, "harmful": is_harmful, "pid": product_id})
+
     # Save flagged ingredients
     db.execute(text("DELETE FROM flagged_ingredients WHERE product_id = :pid"), {"pid": product_id})
-    
+
     for f in flagged:
         db.execute(text("""
             INSERT INTO flagged_ingredients (product_id, ingredient_name, e_number, risk_tier, penalty)
             VALUES (:pid, :name, :enum, :risk, :penalty)
         """), {"pid": product_id, "name": f["name"], "enum": f["e_number"], "risk": f["risk"], "penalty": f["penalty"]})
-    
+
+    # Save suggestion
+    suggestion = generate_suggestion(score, is_harmful, flagged)
+    db.execute(text("DELETE FROM suggestions WHERE product_id = :pid"), {"pid": product_id})
+    db.execute(text("""
+        INSERT INTO suggestions (product_id, suggestion_text, flagged_items)
+        VALUES (:pid, :text, CAST(:flagged AS jsonb))
+    """), {"pid": product_id, "text": suggestion, "flagged": json.dumps(flagged)})
+
     db.commit()
-    
+
     return {
         "product_id": product_id,
         "health_score": score,

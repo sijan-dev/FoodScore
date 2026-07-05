@@ -5,6 +5,8 @@ import '../../app/tokens.dart';
 import '../../models/scan_record.dart';
 import '../../providers/scan_history_provider.dart';
 import '../product/product_detail_screen.dart';
+import '../shared/app_icon_button.dart';
+import '../shared/empty_state_widget.dart';
 
 class HistoryRecommendationsScreen extends ConsumerWidget {
   const HistoryRecommendationsScreen({super.key});
@@ -12,129 +14,137 @@ class HistoryRecommendationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(scanHistoryProvider);
-    final grouped = _groupByDate(history);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-          children: [
-            Row(
-              children: [
-                _IconButton(
-                  icon: Icons.arrow_back,
-                  onTap: () => Navigator.of(context).pop(),
-                ),
-                const Spacer(),
-                Text(
-                  'Your Insights',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const Spacer(),
-                _IconButton(icon: Icons.tune, onTap: () {}),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _StatCard(
-                    label: 'Weekly Score',
-                    value: _averageScore(history).toStringAsFixed(0),
-                    icon: Icons.eco,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _StatCard(
-                    label: 'Healthy Picks',
-                    value: _healthyCount(history).toString(),
-                    icon: Icons.favorite,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Recommendations for You',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 190,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _RecommendationCard(
-                    title: 'Almond Granola',
-                    subtitle: 'High fiber, low sugar',
-                    score: 92,
-                  ),
-                  _RecommendationCard(
-                    title: 'Green Smoothie',
-                    subtitle: 'Low sodium boost',
-                    score: 88,
-                  ),
-                  _RecommendationCard(
-                    title: 'Oat Bars',
-                    subtitle: 'Plant protein',
-                    score: 84,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            for (final entry in grouped.entries) ...[
-              _SectionHeader(title: entry.key),
-              const SizedBox(height: 10),
-              for (final record in entry.value)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _HistoryCard(
-                    record: record,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              ProductDetailScreen(product: record.product),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-            ],
-          ],
-        ),
+        child: history.isEmpty
+            ? _buildEmptyState(context)
+            : _buildContent(context, history),
       ),
     );
   }
-}
 
-class _IconButton extends StatelessWidget {
-  const _IconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainer,
-          borderRadius: BorderRadius.circular(14),
+  Widget _buildEmptyState(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+      children: [
+        _buildHeader(context),
+        const SizedBox(height: 40),
+        const EmptyStateWidget(
+          icon: Icons.history,
+          title: 'No scan history yet',
+          subtitle: 'Scan a product barcode to see your insights here.',
         ),
-        child: Icon(icon, color: AppColors.onSurface),
-      ),
+      ],
+    );
+  }
+
+  Widget _buildContent(BuildContext context, List<ScanRecord> history) {
+    final grouped = _groupByDate(history);
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+      children: [
+        _buildHeader(context),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                label: 'Weekly Score',
+                value: _averageScore(history).toStringAsFixed(0),
+                useLogo: true,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                label: 'Healthy Picks',
+                value: _healthyCount(history).toString(),
+                icon: Icons.favorite,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Recommendations for You',
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium
+              ?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 190,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              _RecommendationCard(
+                title: 'Almond Granola',
+                subtitle: 'High fiber, low sugar',
+                score: 92,
+              ),
+              _RecommendationCard(
+                title: 'Green Smoothie',
+                subtitle: 'Low sodium boost',
+                score: 88,
+              ),
+              _RecommendationCard(
+                title: 'Oat Bars',
+                subtitle: 'Plant protein',
+                score: 84,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        for (final entry in grouped.entries) ...[
+          _SectionHeader(title: entry.key),
+          const SizedBox(height: 10),
+          for (final record in entry.value)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _HistoryCard(
+                record: record,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          ProductDetailScreen(product: record.product),
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      children: [
+        AppIconButton(
+          icon: Icons.arrow_back,
+          onTap: () => Navigator.of(context).pop(),
+          semanticLabel: 'Go back',
+        ),
+        const Spacer(),
+        Text(
+          'Your Insights',
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const Spacer(),
+        AppIconButton(
+          icon: Icons.tune,
+          onTap: () {},
+          semanticLabel: 'Filter',
+        ),
+      ],
     );
   }
 }
@@ -143,19 +153,21 @@ class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.label,
     required this.value,
-    required this.icon,
+    this.icon,
+    this.useLogo = false,
   });
 
   final String label;
   final String value;
-  final IconData icon;
+  final IconData? icon;
+  final bool useLogo;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
@@ -164,10 +176,20 @@ class _StatCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primaryContainer.withValues(alpha: 0.15),
+              color: context.primaryContainer.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: AppColors.primary),
+            child: useLogo
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/images/android-chrome-192x192.png',
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Icon(icon, color: context.primary),
           ),
           const SizedBox(width: 10),
           Column(
@@ -182,7 +204,7 @@ class _StatCard extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: context.onSurfaceVariant,
                 ),
               ),
             ],
@@ -211,7 +233,7 @@ class _RecommendationCard extends StatelessWidget {
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -220,11 +242,11 @@ class _RecommendationCard extends StatelessWidget {
           Container(
             height: 90,
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainer,
+              color: context.surfaceContainer,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Center(
-              child: Icon(Icons.image, color: AppColors.onSurfaceVariant),
+            child: Center(
+              child: Icon(Icons.image, color: context.onSurfaceVariant),
             ),
           ),
           const SizedBox(height: 10),
@@ -240,7 +262,7 @@ class _RecommendationCard extends StatelessWidget {
             subtitle,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+            ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
           ),
           const Spacer(),
           _ScoreChip(score: score),
@@ -312,7 +334,7 @@ class _HistoryCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: context.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -327,8 +349,15 @@ class _HistoryCard extends StatelessWidget {
                 errorBuilder: (context, error, stackTrace) => Container(
                   width: 58,
                   height: 58,
-                  color: AppColors.surfaceContainer,
-                  child: const Icon(Icons.image_not_supported),
+                  decoration: BoxDecoration(
+                    color: context.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    Icons.image_outlined,
+                    size: 24,
+                    color: context.onSurfaceVariant.withValues(alpha: 0.4),
+                  ),
                 ),
               ),
             ),
@@ -349,7 +378,7 @@ class _HistoryCard extends StatelessWidget {
                   Text(
                     record.product.subtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: context.onSurfaceVariant,
                     ),
                   ),
                 ],

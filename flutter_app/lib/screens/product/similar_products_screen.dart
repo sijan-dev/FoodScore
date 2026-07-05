@@ -13,10 +13,10 @@ class SimilarProductsScreen extends StatelessWidget {
     final alternatives = _buildAlternatives(baseProduct);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.onPrimary,
+        backgroundColor: context.primary,
+        foregroundColor: context.onPrimary,
         elevation: 0,
         title: const Text('Similar Products'),
         actions: [
@@ -51,7 +51,7 @@ class _CurrentProductCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(22),
       ),
       child: Row(
@@ -66,7 +66,7 @@ class _CurrentProductCard extends StatelessWidget {
               errorBuilder: (context, error, stackTrace) => Container(
                 width: 72,
                 height: 72,
-                color: AppColors.surfaceContainer,
+                color: context.surfaceContainer,
                 child: const Icon(Icons.image_not_supported),
               ),
             ),
@@ -86,7 +86,7 @@ class _CurrentProductCard extends StatelessWidget {
                 Text(
                   product.subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: context.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -125,9 +125,9 @@ class _FilterChipsState extends State<_FilterChips> {
             label: Text(_labels[index]),
             selected: isActive,
             onSelected: (_) => setState(() => _selected = index),
-            selectedColor: AppColors.primaryContainer,
+            selectedColor: context.primaryContainer,
             labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: isActive ? AppColors.onPrimary : AppColors.onSurface,
+              color: isActive ? context.onPrimary : context.onSurface,
               fontWeight: FontWeight.w600,
             ),
           );
@@ -150,7 +150,7 @@ class _AlternativeCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(22),
       ),
       child: Row(
@@ -168,7 +168,7 @@ class _AlternativeCard extends StatelessWidget {
                   errorBuilder: (context, error, stackTrace) => Container(
                     width: 70,
                     height: 70,
-                    color: AppColors.surfaceContainer,
+                    color: context.surfaceContainer,
                     child: const Icon(Icons.image_not_supported),
                   ),
                 ),
@@ -208,7 +208,7 @@ class _AlternativeCard extends StatelessWidget {
                 Text(
                   product.subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: context.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -239,14 +239,14 @@ class _TagChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: context.surfaceContainer,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
         label,
         style: Theme.of(
           context,
-        ).textTheme.labelSmall?.copyWith(color: AppColors.onSurfaceVariant),
+        ).textTheme.labelSmall?.copyWith(color: context.onSurfaceVariant),
       ),
     );
   }

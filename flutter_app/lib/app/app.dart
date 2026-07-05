@@ -3,19 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/auth_provider.dart';
 import '../providers/onboarding_provider.dart';
+import '../providers/theme_provider.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/auth/auth_screen.dart';
 import 'app_shell.dart';
 import 'theme.dart';
 
-class FoodScoreApp extends StatelessWidget {
+class FoodScoreApp extends ConsumerWidget {
   const FoodScoreApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+
     return MaterialApp(
       title: 'FoodScore',
       theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
       home: const AppEntry(),
       debugShowCheckedModeBanner: false,
     );
@@ -47,10 +52,9 @@ class _AppEntryState extends ConsumerState<AppEntry> {
       return const OnboardingScreen();
     }
 
-    if (auth.status == AuthStatus.initial || auth.status == AuthStatus.loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+    if (auth.status == AuthStatus.initial ||
+        auth.status == AuthStatus.loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (auth.status == AuthStatus.guest ||

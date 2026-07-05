@@ -4,7 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/navigation.dart';
 import '../../app/tokens.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/nav_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../shared/app_icon_button.dart';
 import '../profile/profile_setup_screen.dart';
+import '../settings/health_goals_screen.dart';
+import '../settings/privacy_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -15,16 +20,17 @@ class SettingsScreen extends ConsumerWidget {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
             Row(
               children: [
-                _IconButton(
+                AppIconButton(
                   icon: Icons.arrow_back,
-                  onTap: () => navIndex.value = 0,
+                  onTap: () => ref.read(navIndexProvider.notifier).goTo(0),
+                  semanticLabel: 'Back to home',
                 ),
                 const Spacer(),
                 Text(
@@ -41,6 +47,7 @@ class SettingsScreen extends ConsumerWidget {
             _ProfileCard(
               name: authState.user?.displayName ?? 'Your Profile',
               subtitle: authState.user?.email ?? 'Tap to edit your profile',
+              avatarUrl: authState.user?.avatarUrl,
               onEdit: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const ProfileSetupScreen()),
@@ -57,7 +64,9 @@ class SettingsScreen extends ConsumerWidget {
                   label: 'Profile',
                   onTap: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const ProfileSetupScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const ProfileSetupScreen(),
+                      ),
                     );
                   },
                 ),
@@ -70,17 +79,9 @@ class SettingsScreen extends ConsumerWidget {
                   icon: Icons.favorite_border,
                   label: 'Health Goals',
                   onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('Health Goals'),
-                        content: const Text('Health goals settings coming soon.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('OK'),
-                          ),
-                        ],
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const HealthGoalsScreen(),
                       ),
                     );
                   },
@@ -96,56 +97,32 @@ class SettingsScreen extends ConsumerWidget {
                   icon: Icons.palette_outlined,
                   label: 'Appearance',
                   onTap: () {
+                    final notifier = ref.read(themeModeProvider.notifier);
                     showDialog(
                       context: context,
                       builder: (dialogContext) => SimpleDialog(
                         title: const Text('Choose theme'),
                         children: [
                           SimpleDialogOption(
-                            onPressed: () async {
-                              final navigator = Navigator.of(dialogContext);
-                              final prefs = await SharedPreferences.getInstance();
-                              await prefs.setString('pref_theme', 'light');
-                              navigator.pop();
+                            onPressed: () {
+                              notifier.set(ThemeMode.light);
+                              Navigator.of(dialogContext).pop();
                             },
                             child: const Text('Light'),
                           ),
                           SimpleDialogOption(
-                            onPressed: () async {
-                              final navigator = Navigator.of(dialogContext);
-                              final prefs = await SharedPreferences.getInstance();
-                              await prefs.setString('pref_theme', 'dark');
-                              navigator.pop();
+                            onPressed: () {
+                              notifier.set(ThemeMode.dark);
+                              Navigator.of(dialogContext).pop();
                             },
                             child: const Text('Dark'),
                           ),
                           SimpleDialogOption(
-                            onPressed: () async {
-                              final navigator = Navigator.of(dialogContext);
-                              final prefs = await SharedPreferences.getInstance();
-                              await prefs.setString('pref_theme', 'system');
-                              navigator.pop();
+                            onPressed: () {
+                              notifier.set(ThemeMode.system);
+                              Navigator.of(dialogContext).pop();
                             },
                             child: const Text('System'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-                _SettingsTile(
-                  icon: Icons.language,
-                  label: 'Language',
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('Language'),
-                        content: const Text('Language selection coming soon.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('OK'),
                           ),
                         ],
                       ),
@@ -156,18 +133,8 @@ class SettingsScreen extends ConsumerWidget {
                   icon: Icons.security_outlined,
                   label: 'Privacy',
                   onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('Privacy'),
-                        content: const Text('Privacy options coming soon.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      ),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const PrivacyScreen()),
                     );
                   },
                 ),
@@ -193,7 +160,7 @@ class SettingsScreen extends ConsumerWidget {
                         },
                         child: Text(
                           'Sign Out',
-                          style: TextStyle(color: AppColors.error),
+                          style: TextStyle(color: context.error),
                         ),
                       ),
                     ],
@@ -203,8 +170,8 @@ class SettingsScreen extends ConsumerWidget {
               icon: const Icon(Icons.logout),
               label: const Text('Log Out'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.error,
-                side: const BorderSide(color: AppColors.error),
+                foregroundColor: context.error,
+                side: BorderSide(color: context.error),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -218,32 +185,12 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _IconButton extends StatelessWidget {
-  const _IconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainer,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: AppColors.onSurface),
-      ),
-    );
-  }
-}
-
 class _ToggleSettingsTile extends StatefulWidget {
-  const _ToggleSettingsTile({required this.icon, required this.label, required this.prefKey});
+  const _ToggleSettingsTile({
+    required this.icon,
+    required this.label,
+    required this.prefKey,
+  });
 
   final IconData icon;
   final String label;
@@ -277,21 +224,26 @@ class _ToggleSettingsTileState extends State<_ToggleSettingsTile> {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainer,
-          borderRadius: BorderRadius.circular(12),
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        leading: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: context.surfaceContainer,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(widget.icon, color: context.onSurface),
         ),
-        child: Icon(widget.icon, color: AppColors.onSurface),
+        title: Text(
+          widget.label,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        trailing: Switch.adaptive(value: _value, onChanged: _toggle),
       ),
-      title: Text(
-        widget.label,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-      ),
-      trailing: Switch.adaptive(value: _value, onChanged: _toggle),
     );
   }
 }
@@ -301,26 +253,33 @@ class _ProfileCard extends StatelessWidget {
     required this.name,
     required this.subtitle,
     required this.onEdit,
+    this.avatarUrl,
   });
 
   final String name;
   final String subtitle;
   final VoidCallback onEdit;
+  final String? avatarUrl;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 28,
-            backgroundColor: AppColors.primaryContainer.withValues(alpha: 0.2),
-            child: const Icon(Icons.person, color: AppColors.primary),
+            backgroundColor: context.primaryContainer.withValues(alpha: 0.2),
+            backgroundImage: avatarUrl != null
+                ? NetworkImage(avatarUrl!)
+                : null,
+            child: avatarUrl == null
+                ? Icon(Icons.person, color: context.primary)
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -332,13 +291,17 @@ class _ProfileCard extends StatelessWidget {
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: context.onSurfaceVariant,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -373,13 +336,13 @@ class _SettingsGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(20),
+    return Material(
+      color: context.surfaceContainerLowest,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(children: children),
       ),
-      child: Column(children: children),
     );
   }
 }
@@ -403,10 +366,10 @@ class _SettingsTile extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainer,
+          color: context.surfaceContainer,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: AppColors.onSurface),
+        child: Icon(icon, color: context.onSurface),
       ),
       title: Text(
         label,

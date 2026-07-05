@@ -18,7 +18,7 @@ class ProductHistoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surfaceContainerLow,
+      color: context.surfaceContainerLow,
       borderRadius: BorderRadius.circular(AppColors.radiusMedium),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppColors.radiusMedium),
@@ -28,7 +28,7 @@ class ProductHistoryCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppColors.radiusMedium),
             border: Border.all(
-              color: AppColors.outlineVariant.withValues(alpha: 0.55),
+              color: context.outlineVariant.withValues(alpha: 0.55),
             ),
           ),
           child: Row(
@@ -40,6 +40,21 @@ class ProductHistoryCard extends StatelessWidget {
                   width: 72,
                   height: 72,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: context.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(
+                        AppColors.radiusSmall,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.image_outlined,
+                      size: 28,
+                      color: context.onSurfaceVariant.withValues(alpha: 0.4),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -61,7 +76,7 @@ class ProductHistoryCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                        color: context.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -81,8 +96,8 @@ class ProductHistoryCard extends StatelessWidget {
                         ),
                         _ScoreBadge(
                           label: 'ECO ${product.ecoScore}',
-                          background: _ecoBackground(product.ecoScore),
-                          foreground: _ecoForeground(product.ecoScore),
+                          background: _ecoBackground(product.ecoScore, context),
+                          foreground: _ecoForeground(product.ecoScore, context),
                         ),
                       ],
                     ),
@@ -93,7 +108,7 @@ class ProductHistoryCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                          color: context.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -137,33 +152,35 @@ class ProductHistoryCard extends StatelessWidget {
     }
   }
 
-  Color _ecoBackground(String value) {
+  Color _ecoBackground(String value, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (value.toUpperCase()) {
       case 'A':
       case 'B':
-        return const Color(0xFFD8F0DE);
+        return isDark ? const Color(0xFF1B3A1B) : const Color(0xFFD8F0DE);
       case 'C':
-        return const Color(0xFFF8E0A8);
+        return isDark ? const Color(0xFF3A2E0A) : const Color(0xFFF8E0A8);
       case 'D':
       case 'E':
-        return const Color(0xFFFFE3D8);
+        return isDark ? const Color(0xFF3A1A1A) : const Color(0xFFFFE3D8);
       default:
-        return AppColors.surfaceContainer;
+        return context.surfaceContainer;
     }
   }
 
-  Color _ecoForeground(String value) {
+  Color _ecoForeground(String value, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (value.toUpperCase()) {
       case 'A':
       case 'B':
-        return AppColors.additiveLow;
+        return isDark ? const Color(0xFF81C784) : AppColors.additiveLow;
       case 'C':
-        return AppColors.additiveMedium;
+        return isDark ? const Color(0xFFFFD54F) : AppColors.additiveMedium;
       case 'D':
       case 'E':
-        return AppColors.additiveHigh;
+        return isDark ? const Color(0xFFEF9A9A) : AppColors.additiveHigh;
       default:
-        return AppColors.onSurface;
+        return context.onSurface;
     }
   }
 }

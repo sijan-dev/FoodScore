@@ -6,9 +6,11 @@ import '../../app/navigation/app_router.dart';
 import '../../app/tokens.dart';
 import '../../models/product.dart';
 import '../../models/scan_record.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/scan_history_provider.dart';
 import '../../services/search_service.dart';
 import '../contribution/contribute_barcode_upload_screen.dart';
+import '../placeholders/settings_screen.dart';
 import '../product/product_detail_screen.dart';
 import '../scanner/scanner_screen.dart';
 import '../search/search_results_screen.dart';
@@ -96,7 +98,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: context.surfaceContainerLowest,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -115,9 +117,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: 8),
             Text(
               'Help us grow the database by contributing this product.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.onSurfaceVariant,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -134,8 +136,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 icon: const Icon(Icons.add_photo_alternate_outlined),
                 label: const Text('Contribute Product'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
+                  backgroundColor: context.primary,
+                  foregroundColor: context.onPrimary,
                 ),
               ),
             ),
@@ -149,9 +151,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final history = ref.watch(scanHistoryProvider);
     final recentScans = history.take(4).toList();
+    final authState = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(
@@ -160,8 +163,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           );
         },
-        backgroundColor: AppColors.primaryContainer,
-        foregroundColor: AppColors.onPrimary,
+        tooltip: 'Add product',
+        backgroundColor: context.primaryContainer,
+        foregroundColor: context.onPrimary,
         child: const Icon(Icons.add_rounded),
       ),
       body: SafeArea(
@@ -169,9 +173,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
             _HeaderBar(
+              avatarUrl: authState.user?.avatarUrl,
               onProfileTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Profile coming soon.')),
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
                 );
               },
             ),
@@ -189,7 +194,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 _searchError,
                 style: Theme.of(
                   context,
-                ).textTheme.bodySmall?.copyWith(color: AppColors.error),
+                ).textTheme.bodySmall?.copyWith(color: context.error),
               ),
             ],
             if (_searchResults.isNotEmpty || _isSearching) ...[
@@ -224,7 +229,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'Recent Scans',
               actionLabel: 'View All',
               onAction: () {
-                AppRouter.goToHistory(context);
+                AppRouter.goToHistory(ref);
               },
             ),
             const SizedBox(height: 12),
@@ -262,49 +267,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 class _HeaderBar extends StatelessWidget {
-  const _HeaderBar({required this.onProfileTap});
+  const _HeaderBar({required this.onProfileTap, this.avatarUrl});
 
   final VoidCallback onProfileTap;
+  final String? avatarUrl;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Stack(
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.primaryContainer.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(Icons.eco, color: AppColors.primary),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: context.primaryContainer.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/android-chrome-192x192.png',
+                    width: 44,
+                    height: 44,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
               Text(
                 'FoodScore',
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
-              Text(
-                'Health analysis made simple',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
             ],
           ),
         ),
-        InkWell(
-          onTap: onProfileTap,
-          borderRadius: BorderRadius.circular(24),
-          child: CircleAvatar(
-            radius: 22,
-            backgroundColor: AppColors.surfaceContainer,
-            child: const Icon(Icons.person_outline, color: AppColors.onSurface),
+        Positioned(
+          right: 0,
+          top: 0,
+          child: InkWell(
+            onTap: onProfileTap,
+            borderRadius: BorderRadius.circular(24),
+            child: CircleAvatar(
+              radius: 22,
+              backgroundColor: context.surfaceContainer,
+              backgroundImage: avatarUrl != null
+                  ? NetworkImage(avatarUrl!)
+                  : null,
+              child: avatarUrl == null
+                  ? Icon(Icons.person_outline, color: context.onSurface)
+                  : null,
+            ),
           ),
         ),
       ],
@@ -332,7 +349,7 @@ class _HeroScanCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -379,7 +396,7 @@ class _HeroScanCard extends StatelessWidget {
                           )
                         : null),
               filled: true,
-              fillColor: AppColors.surfaceContainer,
+              fillColor: context.surfaceContainer,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
@@ -389,17 +406,17 @@ class _HeroScanCard extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: Divider(color: AppColors.outlineVariant)),
+              Expanded(child: Divider(color: context.outlineVariant)),
               const SizedBox(width: 12),
               Text(
                 'OR',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: context.onSurfaceVariant,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(child: Divider(color: AppColors.outlineVariant)),
+              Expanded(child: Divider(color: context.outlineVariant)),
             ],
           ),
           const SizedBox(height: 18),
@@ -413,18 +430,18 @@ class _HeroScanCard extends StatelessWidget {
                 height: 92,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primaryContainer,
+                  color: context.primaryContainer,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.4),
+                      color: context.primary.withValues(alpha: 0.4),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
                   ],
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.qr_code_scanner,
-                  color: AppColors.onPrimary,
+                  color: context.onPrimary,
                   size: 40,
                 ),
               ),
@@ -443,7 +460,7 @@ class _HeroScanCard extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+            ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
           ),
         ],
       ),
@@ -472,7 +489,7 @@ class _SearchResultsSection extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: context.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Center(child: CircularProgressIndicator()),
@@ -482,7 +499,7 @@ class _SearchResultsSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -521,8 +538,17 @@ class _SearchResultsSection extends StatelessWidget {
                         errorBuilder: (context, error, stackTrace) => Container(
                           width: 52,
                           height: 52,
-                          color: AppColors.surfaceContainer,
-                          child: const Icon(Icons.image_not_supported),
+                          decoration: BoxDecoration(
+                            color: context.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.image_outlined,
+                            size: 22,
+                            color: context.onSurfaceVariant.withValues(
+                              alpha: 0.4,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -535,7 +561,7 @@ class _SearchResultsSection extends StatelessWidget {
                     subtitle: Text(
                       product.subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                        color: context.onSurfaceVariant,
                       ),
                     ),
                     trailing: const Icon(Icons.chevron_right),
@@ -558,7 +584,7 @@ class _EmptySearchCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: context.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -575,7 +601,7 @@ class _EmptySearchCard extends StatelessWidget {
             'Add this product to help everyone find it next time.',
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+            ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
@@ -632,7 +658,7 @@ class _RecentScanCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: context.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -647,8 +673,15 @@ class _RecentScanCard extends StatelessWidget {
                 errorBuilder: (context, error, stackTrace) => Container(
                   width: 64,
                   height: 64,
-                  color: AppColors.surfaceContainer,
-                  child: const Icon(Icons.image_not_supported),
+                  decoration: BoxDecoration(
+                    color: context.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    Icons.image_outlined,
+                    size: 26,
+                    color: context.onSurfaceVariant.withValues(alpha: 0.4),
+                  ),
                 ),
               ),
             ),
@@ -669,14 +702,14 @@ class _RecentScanCard extends StatelessWidget {
                   Text(
                     record.product.subtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: context.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     record.product.category ?? 'General',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: context.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -706,7 +739,7 @@ class _EmptyStateCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -723,7 +756,7 @@ class _EmptyStateCard extends StatelessWidget {
             subtitle,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+            ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
@@ -757,7 +790,7 @@ class _ScoreRing extends StatelessWidget {
           child: CircularProgressIndicator(
             value: score / 100,
             strokeWidth: 5,
-            backgroundColor: AppColors.surfaceContainerHighest,
+            backgroundColor: context.surfaceContainerHighest,
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),
@@ -765,7 +798,7 @@ class _ScoreRing extends StatelessWidget {
           score.toString(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.onSurface,
+            color: context.onSurface,
           ),
         ),
       ],

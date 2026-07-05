@@ -29,6 +29,14 @@ products = [
         "nutriments": {"sugars_100g": 10.6, "saturated_fat_100g": 0, "salt_100g": 0.02, "fiber_100g": 0, "proteins_100g": 0}
     },
     {
+      "barcode": "5449000000997",
+      "name": "Coca-Cola Zero Sugar",
+      "brand": "Coca-Cola",
+      "category": "Beverages",
+      "additives": ["e150d", "e338", "e950"],
+      "nutriments": {"sugars_100g": 0, "saturated_fat_100g": 0, "salt_100g": 0.02, "fiber_100g": 0, "proteins_100g": 0}
+    },
+    {
         "barcode": "5449000134639",
         "name": "Sprite",
         "brand": "Coca-Cola",

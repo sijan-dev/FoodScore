@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../screens/placeholders/history_screen.dart';
+import '../../providers/nav_provider.dart';
 
 class AppRouter {
-  static void goToHistory(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const HistoryScreen()));
+  static void goToHistory(WidgetRef ref) {
+    ref.read(navIndexProvider.notifier).goTo(1);
   }
 }

@@ -73,14 +73,18 @@ class ApiClient {
       final refreshed = await _tryRefresh();
       if (refreshed) {
         final newHeaders = await _headers(withAuth: true);
-        return _client.post(
-          uri,
-          headers: newHeaders,
-          body: jsonEncode(body),
-        );
+        return _client.post(uri, headers: newHeaders, body: jsonEncode(body));
       }
     }
     return response;
+  }
+
+  Future<Map<String, dynamic>> getMe() async {
+    final response = await get('/auth/me');
+    if (response.statusCode != 200) {
+      throw Exception('Failed to fetch user profile');
+    }
+    return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
   Future<bool> _tryRefresh() async {

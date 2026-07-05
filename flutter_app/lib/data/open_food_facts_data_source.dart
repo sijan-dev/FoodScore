@@ -79,14 +79,7 @@ class OpenFoodFactsDataSource {
         ? (productJson['brands'] as String).trim()
         : 'OpenFoodFacts';
 
-    final imageUrl =
-        (productJson['image_front_small_url'] as String?)?.trim().isNotEmpty ==
-            true
-        ? (productJson['image_front_small_url'] as String).trim()
-        : ((productJson['image_front_url'] as String?)?.trim().isNotEmpty ==
-                  true
-              ? (productJson['image_front_url'] as String).trim()
-              : 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800&q=80');
+    final imageUrl = _extractImageUrl(productJson, barcode: barcode);
 
     final category = (productJson['categories'] as String?)
         ?.split(',')
@@ -107,6 +100,8 @@ class OpenFoodFactsDataSource {
       sugarG: _numToInt(nutriments['sugars_100g']),
       fiberG: _numToInt(nutriments['fiber_100g']),
       fatG: _numToInt(nutriments['fat_100g']),
+      proteinG: _numToInt(nutriments['proteins_100g']),
+      sodiumG: _numToInt(nutriments['sodium_100g']),
     );
 
     final nutriScore = ((productJson['nutriscore_grade'] as String?) ?? 'c')
@@ -146,6 +141,67 @@ class OpenFoodFactsDataSource {
       trafficLabel: _trafficLabel(score),
       source: 'openfoodfacts',
     );
+  }
+
+  String _extractImageUrl(Map<String, dynamic> productJson, {String? barcode}) {
+    final candidates = <String?>[
+      (productJson['image_front_small_url'] as String?)?.trim(),
+      (productJson['image_front_url'] as String?)?.trim(),
+      (productJson['image_small_url'] as String?)?.trim(),
+      (productJson['image_url'] as String?)?.trim(),
+      _extractSelectedImageUrl(productJson),
+    ];
+
+    for (final c in candidates) {
+      if (c != null && c.isNotEmpty) return c;
+    }
+
+    if (barcode != null && barcode.trim().isNotEmpty) {
+      return 'https://images.openfoodfacts.org/images/products/'
+          '${_barcodeImagePath(barcode.trim())}/1.jpg';
+    }
+
+    return '';
+  }
+
+  String? _extractSelectedImageUrl(Map<String, dynamic> productJson) {
+    final selected = productJson['selected_images'] as Map<String, dynamic>?;
+    if (selected == null) return null;
+
+    for (final type in ['front', 'nutrition', 'ingredients']) {
+      final images = selected[type] as Map<String, dynamic>?;
+      if (images == null) continue;
+
+      for (final size in ['small', 'display']) {
+        final sized = images[size] as Map<String, dynamic>?;
+        if (sized == null) continue;
+
+        for (final lang in [
+          'en',
+          'fr',
+          'de',
+          'es',
+          'pt',
+          'it',
+          'pl',
+          'nl',
+          '',
+        ]) {
+          final url = sized[lang] as String?;
+          if (url != null && url.trim().isNotEmpty) return url.trim();
+        }
+      }
+    }
+    return null;
+  }
+
+  String _barcodeImagePath(String barcode) {
+    final clean = barcode.replaceAll(RegExp(r'[^0-9]'), '');
+    final padded = clean.padLeft(13, '0');
+    return '${padded.substring(0, 3)}/'
+        '${padded.substring(3, 6)}/'
+        '${padded.substring(6, 9)}/'
+        '${padded.substring(9, 13)}';
   }
 
   int _numToInt(dynamic value) {

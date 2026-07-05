@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/tokens.dart';
 import '../../providers/auth_provider.dart';
+import '../shared/app_icon_button.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -22,6 +23,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   String _bloodType = 'O+';
   bool _loading = true;
   bool _saving = false;
+  String? _avatarUrl;
 
   static const _kName = 'profile_name';
   static const _kAge = 'profile_age';
@@ -49,7 +51,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   Future<void> _loadSaved() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _nameController.text = prefs.getString(_kName) ?? '';
+      final savedName = prefs.getString(_kName);
+      final authState = ref.read(authProvider);
+      _nameController.text = savedName ?? authState.user?.displayName ?? '';
+      _avatarUrl = authState.user?.avatarUrl;
       final age = prefs.getInt(_kAge);
       if (age != null) _ageController.text = age.toString();
       final weight = prefs.getDouble(_kWeight);
@@ -73,13 +78,20 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kName, _nameController.text);
       await prefs.setInt(_kAge, int.tryParse(_ageController.text) ?? 0);
-      await prefs.setDouble(_kWeight, double.tryParse(_weightController.text) ?? 0.0);
-      await prefs.setDouble(_kHeight, double.tryParse(_heightController.text) ?? 0.0);
+      await prefs.setDouble(
+        _kWeight,
+        double.tryParse(_weightController.text) ?? 0.0,
+      );
+      await prefs.setDouble(
+        _kHeight,
+        double.tryParse(_heightController.text) ?? 0.0,
+      );
       await prefs.setString(_kBlood, _bloodType);
       await prefs.setString(_kAllergies, _allergiesController.text);
 
       final authState = ref.read(authProvider);
-      if (authState.status == AuthStatus.authenticated && authState.user != null) {
+      if (authState.status == AuthStatus.authenticated &&
+          authState.user != null) {
         try {
           final apiClient = ref.read(apiClientProvider);
           final token = await apiClient.accessToken;
@@ -94,14 +106,14 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile saved.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile saved.')));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Save failed.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Save failed.')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -110,202 +122,170 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFDAF3E5), Color(0xFFF9F7F0)],
-              ),
-            ),
-          ),
-          Positioned(
-            top: -80,
-            right: -60,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          SafeArea(
-            child: _loading
-                ? const SizedBox(
-                    height: 200,
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                : ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+      backgroundColor: context.surface,
+      body: SafeArea(
+        child: _loading
+            ? const SizedBox(
+                height: 200,
+                child: Center(child: CircularProgressIndicator()),
+              )
+            : ListView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+                children: [
+                  Row(
                     children: [
-                      Row(
+                      AppIconButton(
+                        icon: Icons.arrow_back,
+                        onTap: () => Navigator.of(context).pop(),
+                        semanticLabel: 'Go back',
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Set Up Profile',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const Spacer(),
+                      const SizedBox(width: 40),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: context.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.shadow.withValues(alpha: 0.12),
+                          blurRadius: 18,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _IconButton(
-                            icon: Icons.arrow_back,
-                            onTap: () => Navigator.of(context).pop(),
+                          Center(
+                            child: CircleAvatar(
+                              radius: 40,
+                              backgroundColor: context.primaryContainer
+                                  .withValues(alpha: 0.2),
+                              backgroundImage: _avatarUrl != null
+                                  ? NetworkImage(_avatarUrl!)
+                                  : null,
+                              child: _avatarUrl == null
+                                  ? Icon(
+                                      Icons.person,
+                                      size: 40,
+                                      color: context.primary,
+                                    )
+                                  : null,
+                            ),
                           ),
-                          const Spacer(),
+                          const SizedBox(height: 16),
                           Text(
-                            'Set Up Profile',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
+                            'Tell us about you',
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
-                          const Spacer(),
-                          const SizedBox(width: 40),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceContainerLowest,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.shadow.withValues(alpha: 0.12),
-                              blurRadius: 18,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          const SizedBox(height: 12),
+                          _InputField(
+                            controller: _nameController,
+                            label: 'Full Name',
+                            hint: 'Enter your name',
+                            icon: Icons.person_outline,
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
                             children: [
-                              Text(
-                                'Tell us about you',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              Expanded(
+                                child: _InputField(
+                                  controller: _ageController,
+                                  label: 'Age',
+                                  hint: 'Years',
+                                  icon: Icons.cake_outlined,
+                                  keyboardType: TextInputType.number,
+                                ),
                               ),
-                              const SizedBox(height: 12),
-                              _InputField(
-                                controller: _nameController,
-                                label: 'Full Name',
-                                hint: 'Enter your name',
-                                icon: Icons.person_outline,
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _InputField(
-                                      controller: _ageController,
-                                      label: 'Age',
-                                      hint: 'Years',
-                                      icon: Icons.cake_outlined,
-                                      keyboardType: TextInputType.number,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _InputField(
-                                      controller: _heightController,
-                                      label: 'Height',
-                                      hint: 'cm',
-                                      icon: Icons.height,
-                                      keyboardType: TextInputType.number,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _InputField(
-                                      controller: _weightController,
-                                      label: 'Weight',
-                                      hint: 'kg',
-                                      icon: Icons.monitor_weight_outlined,
-                                      keyboardType: TextInputType.number,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _DropdownField(
-                                      label: 'Blood Type',
-                                      value: _bloodType,
-                                      items: const [
-                                        'O+',
-                                        'O-',
-                                        'A+',
-                                        'A-',
-                                        'B+',
-                                        'B-',
-                                        'AB+',
-                                        'AB-',
-                                      ],
-                                      onChanged: (value) {
-                                        if (value != null) {
-                                          setState(() => _bloodType = value);
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              _InputField(
-                                controller: _allergiesController,
-                                label: 'Allergies',
-                                hint: 'List any allergies',
-                                icon: Icons.warning_amber_outlined,
-                              ),
-                              const SizedBox(height: 20),
-                              FilledButton(
-                                onPressed: _saving ? null : _save,
-                                child: _saving
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Text('Save Profile'),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _InputField(
+                                  controller: _heightController,
+                                  label: 'Height',
+                                  hint: 'cm',
+                                  icon: Icons.height,
+                                  keyboardType: TextInputType.number,
+                                ),
                               ),
                             ],
                           ),
-                        ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _InputField(
+                                  controller: _weightController,
+                                  label: 'Weight',
+                                  hint: 'kg',
+                                  icon: Icons.monitor_weight_outlined,
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _DropdownField(
+                                  label: 'Blood Type',
+                                  value: _bloodType,
+                                  items: const [
+                                    'O+',
+                                    'O-',
+                                    'A+',
+                                    'A-',
+                                    'B+',
+                                    'B-',
+                                    'AB+',
+                                    'AB-',
+                                  ],
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      setState(() => _bloodType = value);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          _InputField(
+                            controller: _allergiesController,
+                            label: 'Allergies',
+                            hint: 'List any allergies',
+                            icon: Icons.warning_amber_outlined,
+                          ),
+                          const SizedBox(height: 20),
+                          FilledButton(
+                            onPressed: _saving ? null : _save,
+                            child: _saving
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text('Save Profile'),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _IconButton extends StatelessWidget {
-  const _IconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: AppColors.onSurface),
+                ],
+              ),
       ),
     );
   }
@@ -336,7 +316,7 @@ class _InputField extends StatelessWidget {
         hintText: hint,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: AppColors.surfaceContainer,
+        fillColor: context.surfaceContainer,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -373,7 +353,7 @@ class _DropdownField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: AppColors.surfaceContainer,
+        fillColor: context.surfaceContainer,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,

@@ -6,6 +6,20 @@ from app.services.score_service import compute_score
 
 logger = logging.getLogger(__name__)
 
+def _extract_selected_image(product: dict) -> str | None:
+    """Fallback: extract image from selected_images nested structure."""
+    selected = product.get("selected_images", {})
+    for img_type in ("front", "nutrition", "ingredients"):
+        images = selected.get(img_type, {})
+        for size in ("small", "display"):
+            sized = images.get(size, {})
+            for locale in ("en", ""):
+                url = sized.get(locale)
+                if url and str(url).strip():
+                    return str(url).strip()
+    return None
+
+
 async def fetch_from_openfoodfacts(barcode: str) -> dict | None:
     """Fetch product data from OpenFoodFacts API"""
     url = f"https://world.openfoodfacts.org/api/v2/product/{barcode}.json"
@@ -32,12 +46,17 @@ async def fetch_from_openfoodfacts(barcode: str) -> dict | None:
             product = data["product"]
             
             # Extract relevant data
+            image_url = (
+                product.get("image_front_url")
+                or product.get("image_front_small_url")
+                or _extract_selected_image(product)
+            )
             extracted_data = {
                 "barcode": barcode,
                 "name": product.get("product_name", "Unknown"),
                 "brand": product.get("brands", "").split(",")[0].strip() if product.get("brands") else None,
                 "category": product.get("categories", "").split(",")[0].strip() if product.get("categories") else None,
-                "image_url": product.get("image_front_url") or product.get("image_front_small_url"),
+                "image_url": image_url,
                 "ingredients_raw": product.get("ingredients_text", ""),
                 "additives": [a.replace("en:", "").strip() for a in product.get("additives_tags", []) if a],
                 "nutriments": {

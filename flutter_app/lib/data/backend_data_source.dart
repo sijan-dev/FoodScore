@@ -96,6 +96,8 @@ class BackendDataSource {
       sugarG: _numToInt(nutriments['sugars_100g']),
       fiberG: _numToInt(nutriments['fiber_100g']),
       fatG: _numToInt(nutriments['fat_100g']),
+      proteinG: _numToInt(nutriments['proteins_100g']),
+      sodiumG: _numToInt(nutriments['sodium_100g']),
     );
 
     final flagsRaw =
@@ -109,9 +111,7 @@ class BackendDataSource {
       id: json['product_id'] as String? ?? '',
       name: json['name'] as String? ?? 'Unknown Product',
       subtitle: json['brand'] as String? ?? 'Unknown Brand',
-      imageUrl:
-          json['image_url'] as String? ??
-          'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800&q=80',
+      imageUrl: json['image_url'] as String? ?? '',
       score: (json['health_score'] as num?)?.toInt() ?? 0,
       nutriScore: (json['nutri_score'] as String? ?? 'C').toUpperCase(),
       novaGroup: (json['nova_group'] as num?)?.toInt() ?? 3,
