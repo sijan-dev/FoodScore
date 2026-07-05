@@ -59,13 +59,21 @@ class _ContributeBarcodeUploadScreenState
       _isUploading = true;
       _uploadError = false;
     });
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    setState(() => _isUploading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Upload complete! Thanks for contributing.')),
-    );
-    Navigator.of(context).pop();
+    try {
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted) return;
+      setState(() => _isUploading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Upload complete! Thanks for contributing.')),
+      );
+      Navigator.of(context).pop();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isUploading = false;
+        _uploadError = true;
+      });
+    }
   }
 
   @override
