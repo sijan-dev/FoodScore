@@ -7,7 +7,6 @@ import '../../providers/scan_history_provider.dart';
 import '../placeholders/settings_screen.dart';
 import '../product/product_detail_screen.dart';
 import '../shared/app_icon_button.dart';
-import '../shared/loading_widget.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
@@ -68,9 +67,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     return Scaffold(
       backgroundColor: context.surface,
       body: SafeArea(
-        child: ref.watch(scanHistoryLoadingProvider)
-            ? const LoadingWidget(message: 'Loading history...')
-            : ListView(
+        child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
                 children: [
                   Row(

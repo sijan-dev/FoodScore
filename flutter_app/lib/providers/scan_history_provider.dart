@@ -10,14 +10,6 @@ final scanHistoryProvider =
       ScanHistoryNotifier.new,
     );
 
-class _LoadingNotifier extends Notifier<bool> {
-  @override
-  bool build() => false;
-}
-
-final scanHistoryLoadingProvider =
-    NotifierProvider<_LoadingNotifier, bool>(_LoadingNotifier.new);
-
 class ScanHistoryNotifier extends Notifier<List<ScanRecord>> {
   static const _historyKey = 'scan_history';
 
@@ -28,16 +20,11 @@ class ScanHistoryNotifier extends Notifier<List<ScanRecord>> {
   }
 
   Future<void> _loadHistory() async {
-    ref.read(scanHistoryLoadingProvider.notifier).state = true;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final historyJson = prefs.getStringList(_historyKey) ?? [];
-      state = historyJson
-          .map((item) => ScanRecord.fromJson(jsonDecode(item)))
-          .toList();
-    } finally {
-      ref.read(scanHistoryLoadingProvider.notifier).state = false;
-    }
+    final prefs = await SharedPreferences.getInstance();
+    final historyJson = prefs.getStringList(_historyKey) ?? [];
+    state = historyJson
+        .map((item) => ScanRecord.fromJson(jsonDecode(item)))
+        .toList();
   }
 
   Future<void> addRecord(ScanRecord record) async {

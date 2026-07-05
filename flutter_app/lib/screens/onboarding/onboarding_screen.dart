@@ -205,7 +205,7 @@ class _DotsIndicator extends StatelessWidget {
                         offset: const Offset(0, 1),
                       ),
                     ]
-                  : null,
+                  : [],
             ),
           ),
         );

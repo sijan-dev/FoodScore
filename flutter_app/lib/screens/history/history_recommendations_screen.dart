@@ -7,7 +7,6 @@ import '../../providers/scan_history_provider.dart';
 import '../product/product_detail_screen.dart';
 import '../shared/app_icon_button.dart';
 import '../shared/empty_state_widget.dart';
-import '../shared/loading_widget.dart';
 
 class HistoryRecommendationsScreen extends ConsumerWidget {
   const HistoryRecommendationsScreen({super.key});
@@ -15,16 +14,13 @@ class HistoryRecommendationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(scanHistoryProvider);
-    final isLoading = ref.watch(scanHistoryLoadingProvider);
 
     return Scaffold(
       backgroundColor: context.surface,
       body: SafeArea(
-        child: isLoading
-            ? const LoadingWidget(message: 'Loading history...')
-            : history.isEmpty
-                ? _buildEmptyState(context)
-                : _buildContent(context, history),
+        child: history.isEmpty
+            ? _buildEmptyState(context)
+            : _buildContent(context, history),
       ),
     );
   }
