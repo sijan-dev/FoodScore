@@ -6,6 +6,8 @@ import '../../models/scan_record.dart';
 import '../../providers/scan_history_provider.dart';
 import '../product/product_detail_screen.dart';
 import '../shared/app_icon_button.dart';
+import '../shared/empty_state_widget.dart';
+import '../shared/loading_widget.dart';
 
 class HistoryRecommendationsScreen extends ConsumerWidget {
   const HistoryRecommendationsScreen({super.key});
@@ -13,110 +15,140 @@ class HistoryRecommendationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(scanHistoryProvider);
-    final grouped = _groupByDate(history);
+    final isLoading = ref.watch(scanHistoryLoadingProvider);
 
     return Scaffold(
       backgroundColor: context.surface,
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+        child: isLoading
+            ? const LoadingWidget(message: 'Loading history...')
+            : history.isEmpty
+                ? _buildEmptyState(context)
+                : _buildContent(context, history),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+      children: [
+        _buildHeader(context),
+        const SizedBox(height: 40),
+        const EmptyStateWidget(
+          icon: Icons.history,
+          title: 'No scan history yet',
+          subtitle: 'Scan a product barcode to see your insights here.',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContent(BuildContext context, List<ScanRecord> history) {
+    final grouped = _groupByDate(history);
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+      children: [
+        _buildHeader(context),
+        const SizedBox(height: 20),
+        Row(
           children: [
-            Row(
-              children: [
-                AppIconButton(
-                  icon: Icons.arrow_back,
-                  onTap: () => Navigator.of(context).pop(),
-                  semanticLabel: 'Go back',
-                ),
-                const Spacer(),
-                Text(
-                  'Your Insights',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const Spacer(),
-                AppIconButton(
-                  icon: Icons.tune,
-                  onTap: () {},
-                  semanticLabel: 'Filter',
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _StatCard(
-                    label: 'Weekly Score',
-                    value: _averageScore(history).toStringAsFixed(0),
-                    useLogo: true,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _StatCard(
-                    label: 'Healthy Picks',
-                    value: _healthyCount(history).toString(),
-                    icon: Icons.favorite,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Recommendations for You',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 190,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _RecommendationCard(
-                    title: 'Almond Granola',
-                    subtitle: 'High fiber, low sugar',
-                    score: 92,
-                  ),
-                  _RecommendationCard(
-                    title: 'Green Smoothie',
-                    subtitle: 'Low sodium boost',
-                    score: 88,
-                  ),
-                  _RecommendationCard(
-                    title: 'Oat Bars',
-                    subtitle: 'Plant protein',
-                    score: 84,
-                  ),
-                ],
+            Expanded(
+              child: _StatCard(
+                label: 'Weekly Score',
+                value: _averageScore(history).toStringAsFixed(0),
+                useLogo: true,
               ),
             ),
-            const SizedBox(height: 20),
-            for (final entry in grouped.entries) ...[
-              _SectionHeader(title: entry.key),
-              const SizedBox(height: 10),
-              for (final record in entry.value)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _HistoryCard(
-                    record: record,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              ProductDetailScreen(product: record.product),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-            ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                label: 'Healthy Picks',
+                value: _healthyCount(history).toString(),
+                icon: Icons.favorite,
+              ),
+            ),
           ],
         ),
-      ),
+        const SizedBox(height: 20),
+        Text(
+          'Recommendations for You',
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium
+              ?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 190,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              _RecommendationCard(
+                title: 'Almond Granola',
+                subtitle: 'High fiber, low sugar',
+                score: 92,
+              ),
+              _RecommendationCard(
+                title: 'Green Smoothie',
+                subtitle: 'Low sodium boost',
+                score: 88,
+              ),
+              _RecommendationCard(
+                title: 'Oat Bars',
+                subtitle: 'Plant protein',
+                score: 84,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        for (final entry in grouped.entries) ...[
+          _SectionHeader(title: entry.key),
+          const SizedBox(height: 10),
+          for (final record in entry.value)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _HistoryCard(
+                record: record,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          ProductDetailScreen(product: record.product),
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      children: [
+        AppIconButton(
+          icon: Icons.arrow_back,
+          onTap: () => Navigator.of(context).pop(),
+          semanticLabel: 'Go back',
+        ),
+        const Spacer(),
+        Text(
+          'Your Insights',
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const Spacer(),
+        AppIconButton(
+          icon: Icons.tune,
+          onTap: () {},
+          semanticLabel: 'Filter',
+        ),
+      ],
     );
   }
 }
