@@ -5,6 +5,7 @@ import '../../app/tokens.dart';
 import '../../models/scan_record.dart';
 import '../../providers/scan_history_provider.dart';
 import '../product/product_detail_screen.dart';
+import '../shared/app_icon_button.dart';
 
 class HistoryRecommendationsScreen extends ConsumerWidget {
   const HistoryRecommendationsScreen({super.key});
@@ -22,9 +23,10 @@ class HistoryRecommendationsScreen extends ConsumerWidget {
           children: [
             Row(
               children: [
-                _IconButton(
+                AppIconButton(
                   icon: Icons.arrow_back,
                   onTap: () => Navigator.of(context).pop(),
+                  semanticLabel: 'Go back',
                 ),
                 const Spacer(),
                 Text(
@@ -34,7 +36,11 @@ class HistoryRecommendationsScreen extends ConsumerWidget {
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const Spacer(),
-                _IconButton(icon: Icons.tune, onTap: () {}),
+                AppIconButton(
+                  icon: Icons.tune,
+                  onTap: () {},
+                  semanticLabel: 'Filter',
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -110,30 +116,6 @@ class HistoryRecommendationsScreen extends ConsumerWidget {
             ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _IconButton extends StatelessWidget {
-  const _IconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: context.surfaceContainer,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: context.onSurface),
       ),
     );
   }
@@ -343,7 +325,11 @@ class _HistoryCard extends StatelessWidget {
                     color: context.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(Icons.image_outlined, size: 24, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
+                  child: Icon(
+                    Icons.image_outlined,
+                    size: 24,
+                    color: context.onSurfaceVariant.withValues(alpha: 0.4),
+                  ),
                 ),
               ),
             ),

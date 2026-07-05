@@ -16,10 +16,30 @@ class _GoalsPageState extends State<GoalsPage> {
   final Set<String> _selected = {};
 
   static const _goals = [
-    ('weight', 'Weight Management', Icons.monitor_weight, 'Track calories and portion control'),
-    ('wellness', 'General Wellness', Icons.favorite, 'Eat balanced, feel great'),
-    ('dietary', 'Dietary Monitoring', Icons.warning_amber, 'Avoid allergens and additives'),
-    ('muscle', 'Muscle & Fitness', Icons.fitness_center, 'High protein, nutrient-dense foods'),
+    (
+      'weight',
+      'Weight Management',
+      Icons.monitor_weight,
+      'Track calories and portion control',
+    ),
+    (
+      'wellness',
+      'General Wellness',
+      Icons.favorite,
+      'Eat balanced, feel great',
+    ),
+    (
+      'dietary',
+      'Dietary Monitoring',
+      Icons.warning_amber,
+      'Avoid allergens and additives',
+    ),
+    (
+      'muscle',
+      'Muscle & Fitness',
+      Icons.fitness_center,
+      'High protein, nutrient-dense foods',
+    ),
   ];
 
   void _toggle(String key) {
@@ -41,44 +61,44 @@ class _GoalsPageState extends State<GoalsPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'What are your goals?',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: context.primary,
-            ),
-          ).animate().fadeIn(duration: 400.ms).slideY(
-            begin: 0.3,
-            end: 0,
-            curve: Curves.easeOutCubic,
-          ),
+                'What are your goals?',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: context.primary,
+                ),
+              )
+              .animate()
+              .fadeIn(duration: 400.ms)
+              .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
           const SizedBox(height: 8),
           Text(
-            'Pick one or more to personalize your experience',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: context.onSurfaceVariant,
-            ),
-          ).animate().fadeIn(duration: 400.ms, delay: 150.ms).slideY(
-            begin: 0.3,
-            end: 0,
-            curve: Curves.easeOutCubic,
-          ),
+                'Pick one or more to personalize your experience',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: context.onSurfaceVariant,
+                ),
+              )
+              .animate()
+              .fadeIn(duration: 400.ms, delay: 150.ms)
+              .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
           const SizedBox(height: 28),
-          ..._goals.mapIndexed((i, g) => Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _GoalCard(
-              icon: g.$3,
-              title: g.$2,
-              subtitle: g.$4,
-              selected: _selected.contains(g.$1),
-              onTap: () => _toggle(g.$1),
-            ).animate().fadeIn(duration: 350.ms, delay: (i * 100 + 250).ms).slideY(
-              begin: 0.2,
-              end: 0,
-              curve: Curves.easeOutCubic,
+          ..._goals.mapIndexed(
+            (i, g) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child:
+                  _GoalCard(
+                        icon: g.$3,
+                        title: g.$2,
+                        subtitle: g.$4,
+                        selected: _selected.contains(g.$1),
+                        onTap: () => _toggle(g.$1),
+                      )
+                      .animate()
+                      .fadeIn(duration: 350.ms, delay: (i * 100 + 250).ms)
+                      .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -120,7 +140,10 @@ class _GoalCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: selected ? context.primary : context.onSurfaceVariant),
+            Icon(
+              icon,
+              color: selected ? context.primary : context.onSurfaceVariant,
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(

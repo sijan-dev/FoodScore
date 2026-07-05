@@ -5,7 +5,14 @@ import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../data/auth_data_source.dart';
 
-enum AuthStatus { initial, loading, authenticated, unauthenticated, error, guest }
+enum AuthStatus {
+  initial,
+  loading,
+  authenticated,
+  unauthenticated,
+  error,
+  guest,
+}
 
 class AuthState {
   final AuthStatus status;
@@ -84,10 +91,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final apiClient = ref.read(apiClientProvider);
       final result = await authService.signInWithGoogle();
       await apiClient.saveTokens(result.accessToken, result.refreshToken);
-      state = AuthState(
-        status: AuthStatus.authenticated,
-        user: result.user,
-      );
+      state = AuthState(status: AuthStatus.authenticated, user: result.user);
     } catch (e) {
       state = AuthState(
         status: AuthStatus.error,
@@ -103,10 +107,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final apiClient = ref.read(apiClientProvider);
       final result = await authService.signInWithEmail(email, password);
       await apiClient.saveTokens(result.accessToken, result.refreshToken);
-      state = AuthState(
-        status: AuthStatus.authenticated,
-        user: result.user,
-      );
+      state = AuthState(status: AuthStatus.authenticated, user: result.user);
     } catch (e) {
       state = AuthState(
         status: AuthStatus.error,
@@ -122,10 +123,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final apiClient = ref.read(apiClientProvider);
       final result = await authService.register(username, email, password);
       await apiClient.saveTokens(result.accessToken, result.refreshToken);
-      state = AuthState(
-        status: AuthStatus.authenticated,
-        user: result.user,
-      );
+      state = AuthState(status: AuthStatus.authenticated, user: result.user);
     } catch (e) {
       state = AuthState(
         status: AuthStatus.error,
@@ -158,10 +156,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   void setError(String message) {
-    state = state.copyWith(
-      status: AuthStatus.error,
-      errorMessage: message,
-    );
+    state = state.copyWith(status: AuthStatus.error, errorMessage: message);
   }
 }
 

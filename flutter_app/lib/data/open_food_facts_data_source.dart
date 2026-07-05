@@ -143,10 +143,7 @@ class OpenFoodFactsDataSource {
     );
   }
 
-  String _extractImageUrl(
-    Map<String, dynamic> productJson, {
-    String? barcode,
-  }) {
+  String _extractImageUrl(Map<String, dynamic> productJson, {String? barcode}) {
     final candidates = <String?>[
       (productJson['image_front_small_url'] as String?)?.trim(),
       (productJson['image_front_url'] as String?)?.trim(),
@@ -168,8 +165,7 @@ class OpenFoodFactsDataSource {
   }
 
   String? _extractSelectedImageUrl(Map<String, dynamic> productJson) {
-    final selected =
-        productJson['selected_images'] as Map<String, dynamic>?;
+    final selected = productJson['selected_images'] as Map<String, dynamic>?;
     if (selected == null) return null;
 
     for (final type in ['front', 'nutrition', 'ingredients']) {
@@ -180,7 +176,17 @@ class OpenFoodFactsDataSource {
         final sized = images[size] as Map<String, dynamic>?;
         if (sized == null) continue;
 
-        for (final lang in ['en', 'fr', 'de', 'es', 'pt', 'it', 'pl', 'nl', '']) {
+        for (final lang in [
+          'en',
+          'fr',
+          'de',
+          'es',
+          'pt',
+          'it',
+          'pl',
+          'nl',
+          '',
+        ]) {
           final url = sized[lang] as String?;
           if (url != null && url.trim().isNotEmpty) return url.trim();
         }

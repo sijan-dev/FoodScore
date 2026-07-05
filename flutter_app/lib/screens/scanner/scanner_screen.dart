@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart' hide Barcode;
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart'
+    hide Barcode;
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -10,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../app/tokens.dart';
 import '../../models/product.dart';
 import '../../services/barcode_service.dart';
+import '../shared/error_state_widget.dart';
 import 'scan_results_screen.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
@@ -19,16 +21,32 @@ class ScannerScreen extends ConsumerStatefulWidget {
   ConsumerState<ScannerScreen> createState() => _ScannerScreenState();
 }
 
-class _ScannerScreenState extends ConsumerState<ScannerScreen> {
+class _ScannerScreenState extends ConsumerState<ScannerScreen>
+    with WidgetsBindingObserver {
   final MobileScannerController _controller = MobileScannerController();
   final BarcodeService _barcodeService = BarcodeService();
   bool _isProcessing = false;
   String _statusText = 'Searching for barcode...';
+  bool _hasCameraError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _hasCameraError) {
+      setState(() => _hasCameraError = false);
+    }
   }
 
   Future<void> _handleBarcode(String code) async {
@@ -108,27 +126,41 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.scannerBg,
       body: Stack(
         children: [
-          MobileScanner(
-            controller: _controller,
-            onDetect: (capture) {
-              final barcode = capture.barcodes.firstOrNull?.rawValue;
-              if (barcode != null) {
-                _handleBarcode(barcode);
-              }
-            },
-          ),
+          if (_hasCameraError)
+            ErrorStateWidget(
+              message: 'Unable to access the camera.',
+              retryLabel: 'Open Settings',
+              onRetry: () => openAppSettings(),
+            )
+          else
+            MobileScanner(
+              controller: _controller,
+              onDetect: (capture) {
+                final barcode = capture.barcodes.firstOrNull?.rawValue;
+                if (barcode != null) {
+                  _handleBarcode(barcode);
+                }
+              },
+              errorBuilder: (context, error) {
+                debugPrint('MobileScanner error: $error');
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() => _hasCameraError = true);
+                });
+                return const SizedBox.shrink();
+              },
+            ),
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.6),
-                  Colors.black.withValues(alpha: 0.2),
-                  Colors.black.withValues(alpha: 0.7),
+                  AppColors.scannerOverlayTop,
+                  AppColors.scannerOverlayMid,
+                  AppColors.scannerOverlayBottom,
                 ],
               ),
             ),
@@ -143,10 +175,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     children: [
                       _CircleButton(
                         icon: Icons.close,
+                        semanticLabel: 'Close scanner',
                         onTap: () => Navigator.of(context).pop(),
                       ),
                       _CircleButton(
                         icon: Icons.flash_on,
+                        semanticLabel: 'Toggle flash',
                         onTap: () {
                           _controller.toggleTorch();
                         },
@@ -163,12 +197,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                   'Align the barcode within the frame',
                   style: Theme.of(
                     context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.white70),
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.scannerText),
                 ),
                 const SizedBox(height: 24),
-                _GalleryButton(
-                  onTap: _pickFromGallery,
-                ),
+                _GalleryButton(onTap: _pickFromGallery),
                 const SizedBox(height: 20),
               ],
             ),
@@ -180,27 +212,47 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 }
 
 class _CircleButton extends StatelessWidget {
-  const _CircleButton({required this.icon, required this.onTap});
+  const _CircleButton({
+    required this.icon,
+    required this.onTap,
+    this.semanticLabel,
+  });
 
   final IconData icon;
   final VoidCallback onTap;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white24),
+    final label = semanticLabel ?? _defaultLabel(icon);
+    return Semantics(
+      button: true,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppColors.scannerButtonBg,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppColors.scannerButtonBorder),
+          ),
+          child: Icon(icon, color: AppColors.scannerCorner),
         ),
-        child: Icon(icon, color: Colors.white),
       ),
     );
+  }
+
+  String _defaultLabel(IconData icon) {
+    if (icon == Icons.close) {
+      return 'Close scanner';
+    }
+    if (icon == Icons.flash_on || icon == Icons.flash_off) {
+      return 'Toggle flash';
+    }
+    return 'Button';
   }
 }
 
@@ -221,7 +273,7 @@ class _ScannerFrame extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
+                  color: AppColors.scannerFrameBorder,
                   width: 2,
                 ),
               ),
@@ -274,14 +326,20 @@ class _Corner extends StatelessWidget {
         height: 40,
         decoration: BoxDecoration(
           border: Border(
-            top: BorderSide(color: Colors.white, width: top != null ? 3 : 0),
-            left: BorderSide(color: Colors.white, width: left != null ? 3 : 0),
+            top: BorderSide(
+              color: AppColors.scannerCorner,
+              width: top != null ? 3 : 0,
+            ),
+            left: BorderSide(
+              color: AppColors.scannerCorner,
+              width: left != null ? 3 : 0,
+            ),
             right: BorderSide(
-              color: Colors.white,
+              color: AppColors.scannerCorner,
               width: right != null ? 3 : 0,
             ),
             bottom: BorderSide(
-              color: Colors.white,
+              color: AppColors.scannerCorner,
               width: bottom != null ? 3 : 0,
             ),
           ),
@@ -315,14 +373,14 @@ class _StatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
+        color: AppColors.scannerPillBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white24),
+        border: Border.all(color: AppColors.scannerPillBorder),
       ),
       child: Text(
         text,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Colors.white,
+          color: AppColors.scannerCorner,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -339,11 +397,11 @@ class _GalleryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return OutlinedButton.icon(
       onPressed: onTap,
-      icon: const Icon(Icons.photo_library_outlined, color: Colors.white),
+      icon: Icon(Icons.photo_library_outlined, color: AppColors.scannerCorner),
       label: const Text('Pick from Gallery'),
       style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white,
-        side: const BorderSide(color: Colors.white70),
+        foregroundColor: AppColors.scannerCorner,
+        side: BorderSide(color: AppColors.scannerGalleryBorder),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),

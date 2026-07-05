@@ -6,6 +6,7 @@ import '../../models/scan_record.dart';
 import '../../providers/scan_history_provider.dart';
 import '../placeholders/settings_screen.dart';
 import '../product/product_detail_screen.dart';
+import '../shared/app_icon_button.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
@@ -53,10 +54,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final query = _searchController.text.trim().toLowerCase();
     final filtered = query.isEmpty
         ? history
-        : history.where((r) =>
-            r.product.name.toLowerCase().contains(query) ||
-            r.product.subtitle.toLowerCase().contains(query) ||
-            r.product.barcode.contains(query)).toList();
+        : history
+              .where(
+                (r) =>
+                    r.product.name.toLowerCase().contains(query) ||
+                    r.product.subtitle.toLowerCase().contains(query) ||
+                    r.product.barcode.contains(query),
+              )
+              .toList();
     final grouped = _groupByDate(filtered);
 
     return Scaffold(
@@ -86,28 +91,31 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 const SizedBox(width: 12),
                 Text(
                   'FoodScore',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const Spacer(),
-                _IconButton(
+                AppIconButton(
                   icon: Icons.search,
                   onTap: () => setState(() => _showSearch = !_showSearch),
+                  semanticLabel: 'Search history',
                 ),
                 const SizedBox(width: 8),
-                _IconButton(
+                AppIconButton(
                   icon: Icons.delete_outline,
                   onTap: _confirmClear,
+                  semanticLabel: 'Clear history',
                 ),
                 const SizedBox(width: 8),
-                _IconButton(
+                AppIconButton(
                   icon: Icons.person_outline,
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const SettingsScreen()),
                     );
                   },
+                  semanticLabel: 'Profile',
                 ),
               ],
             ),
@@ -222,44 +230,19 @@ class _EmptyHistoryCard extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'No scans yet',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
             'Scan a product barcode to see your history here.',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: context.onSurfaceVariant,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _IconButton extends StatelessWidget {
-  const _IconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: context.surfaceContainer,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: context.onSurface),
       ),
     );
   }
@@ -385,7 +368,11 @@ class _HistoryCard extends StatelessWidget {
                     color: context.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(Icons.image_outlined, size: 24, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
+                  child: Icon(
+                    Icons.image_outlined,
+                    size: 24,
+                    color: context.onSurfaceVariant.withValues(alpha: 0.4),
+                  ),
                 ),
               ),
             ),

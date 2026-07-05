@@ -7,6 +7,7 @@ import '../../models/scan_record.dart';
 import '../../providers/scan_history_provider.dart';
 import '../contribution/contribute_barcode_upload_screen.dart';
 import '../product/product_detail_screen.dart';
+import '../shared/app_icon_button.dart';
 import '../shared/product_history_card.dart';
 
 class ScanResultsScreen extends ConsumerStatefulWidget {
@@ -61,9 +62,9 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
             const SizedBox(height: 8),
             Text(
               'You can help by contributing product photos.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: context.onSurfaceVariant,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -111,9 +112,10 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
           children: [
             Row(
               children: [
-                _IconButton(
+                AppIconButton(
                   icon: Icons.arrow_back,
                   onTap: () => Navigator.of(context).pop(),
+                  semanticLabel: 'Go back',
                 ),
                 const Spacer(),
                 Text(
@@ -162,30 +164,6 @@ class _ScanResultsScreenState extends ConsumerState<ScanResultsScreen> {
               ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _IconButton extends StatelessWidget {
-  const _IconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: context.surfaceContainer,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: context.onSurface),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/tokens.dart';
 import '../../models/product.dart';
 import '../../utils/goal_highlighter.dart';
+import '../shared/app_icon_button.dart';
 import 'similar_products_screen.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
@@ -13,7 +14,8 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
   final Product product;
 
   @override
-  ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
+  ConsumerState<ProductDetailScreen> createState() =>
+      _ProductDetailScreenState();
 }
 
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
@@ -43,8 +45,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       if (product.subtitle.isNotEmpty) product.subtitle,
     }.toList();
 
-    final hls = _goalsLoaded ? GoalHighlighter.highlights(product, _goals) : <GoalHighlight>[];
-    final scoreAdj = _goalsLoaded ? GoalHighlighter.scoreAdjustment(product, _goals) : 0;
+    final hls = _goalsLoaded
+        ? GoalHighlighter.highlights(product, _goals)
+        : <GoalHighlight>[];
+    final scoreAdj = _goalsLoaded
+        ? GoalHighlighter.scoreAdjustment(product, _goals)
+        : 0;
     final adjustedScore = (product.score + scoreAdj).clamp(0, 100);
     final prioritizedInsights = _goalsLoaded
         ? GoalHighlighter.prioritizeInsights(product, _goals, product.insights)
@@ -58,9 +64,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           children: [
             Row(
               children: [
-                _IconButton(
+                AppIconButton(
                   icon: Icons.arrow_back,
                   onTap: () => Navigator.of(context).pop(),
+                  semanticLabel: 'Go back',
                 ),
                 const Spacer(),
                 Container(
@@ -93,7 +100,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   ),
                 ),
                 const Spacer(),
-                _IconButton(icon: Icons.bookmark_border, onTap: () {}),
+                AppIconButton(
+                  icon: Icons.bookmark_border,
+                  onTap: () {},
+                  semanticLabel: 'Bookmark',
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -119,15 +130,21 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       width: double.infinity,
                       height: 180,
                       fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: double.infinity,
-                    height: 180,
-                    decoration: BoxDecoration(
-                      color: context.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Icon(Icons.image_outlined, size: 48, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
-                  ),
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: double.infinity,
+                        height: 180,
+                        decoration: BoxDecoration(
+                          color: context.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Icon(
+                          Icons.image_outlined,
+                          size: 48,
+                          color: context.onSurfaceVariant.withValues(
+                            alpha: 0.4,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -167,10 +184,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               scoreAdj > 0
                                   ? '+$scoreAdj from goals'
                                   : '$scoreAdj from goals',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: scoreAdj > 0 ? AppColors.good : AppColors.error,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: scoreAdj > 0
+                                        ? AppColors.good
+                                        : AppColors.error,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                             ),
                           ],
                           const SizedBox(height: 4),
@@ -284,30 +304,6 @@ class _GoalBadge extends StatelessWidget {
   }
 }
 
-class _IconButton extends StatelessWidget {
-  const _IconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: context.surfaceContainer,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: context.onSurface),
-      ),
-    );
-  }
-}
-
 class _TagChip extends StatelessWidget {
   const _TagChip({required this.label});
 
@@ -402,9 +398,9 @@ class _NutriScoreCard extends StatelessWidget {
           Text(
             'NUTRI-SCORE',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: context.onSurfaceVariant,
-                  letterSpacing: 1.2,
-                ),
+              color: context.onSurfaceVariant,
+              letterSpacing: 1.2,
+            ),
           ),
           const SizedBox(height: 10),
           Row(
@@ -426,19 +422,23 @@ class _NutriScoreCard extends StatelessWidget {
                       boxShadow: letter == active
                           ? [
                               BoxShadow(
-                                color: _nutriColor(letter).withValues(alpha: 0.3),
+                                color: _nutriColor(
+                                  letter,
+                                ).withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
-                              )
+                              ),
                             ]
                           : null,
                     ),
                     child: Text(
                       letter,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: letter == active ? Colors.white : _nutriColor(letter),
-                            fontWeight: FontWeight.w800,
-                          ),
+                        color: letter == active
+                            ? Colors.white
+                            : _nutriColor(letter),
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),
@@ -585,9 +585,9 @@ class _IngredientRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: context.surfaceContainerLowest,
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border(left: BorderSide(color: color, width: 4)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
@@ -650,10 +650,7 @@ class _InsightCard extends StatelessWidget {
                   color: context.primaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  Icons.auto_awesome,
-                  color: context.onPrimary,
-                ),
+                child: Icon(Icons.auto_awesome, color: context.onPrimary),
               ),
               const SizedBox(width: 10),
               Text(

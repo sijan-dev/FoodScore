@@ -45,9 +45,15 @@ class ProductHistoryCard extends StatelessWidget {
                     height: 72,
                     decoration: BoxDecoration(
                       color: context.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(AppColors.radiusSmall),
+                      borderRadius: BorderRadius.circular(
+                        AppColors.radiusSmall,
+                      ),
                     ),
-                    child: Icon(Icons.image_outlined, size: 28, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
+                    child: Icon(
+                      Icons.image_outlined,
+                      size: 28,
+                      color: context.onSurfaceVariant.withValues(alpha: 0.4),
+                    ),
                   ),
                 ),
               ),
@@ -147,30 +153,32 @@ class ProductHistoryCard extends StatelessWidget {
   }
 
   Color _ecoBackground(String value, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (value.toUpperCase()) {
       case 'A':
       case 'B':
-        return const Color(0xFFD8F0DE);
+        return isDark ? const Color(0xFF1B3A1B) : const Color(0xFFD8F0DE);
       case 'C':
-        return const Color(0xFFF8E0A8);
+        return isDark ? const Color(0xFF3A2E0A) : const Color(0xFFF8E0A8);
       case 'D':
       case 'E':
-        return const Color(0xFFFFE3D8);
+        return isDark ? const Color(0xFF3A1A1A) : const Color(0xFFFFE3D8);
       default:
         return context.surfaceContainer;
     }
   }
 
   Color _ecoForeground(String value, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (value.toUpperCase()) {
       case 'A':
       case 'B':
-        return AppColors.additiveLow;
+        return isDark ? const Color(0xFF81C784) : AppColors.additiveLow;
       case 'C':
-        return AppColors.additiveMedium;
+        return isDark ? const Color(0xFFFFD54F) : AppColors.additiveMedium;
       case 'D':
       case 'E':
-        return AppColors.additiveHigh;
+        return isDark ? const Color(0xFFEF9A9A) : AppColors.additiveHigh;
       default:
         return context.onSurface;
     }

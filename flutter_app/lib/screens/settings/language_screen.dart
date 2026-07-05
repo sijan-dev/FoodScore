@@ -50,7 +50,9 @@ class _LanguageScreenState extends State<LanguageScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Language set to ${_languages.firstWhere((l) => l.$1 == code).$2}'),
+          content: Text(
+            'Language set to ${_languages.firstWhere((l) => l.$1 == code).$2}',
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -80,7 +82,10 @@ class _LanguageScreenState extends State<LanguageScreen> {
                 final isSelected = lang.$1 == _selected;
                 return ListTile(
                   onTap: () => _select(lang.$1),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
                   leading: Container(
                     width: 40,
                     height: 40,
@@ -90,7 +95,9 @@ class _LanguageScreenState extends State<LanguageScreen> {
                     ),
                     child: Center(
                       child: Text(
-                        lang.$3.isNotEmpty ? lang.$3[0].toUpperCase() : lang.$2[0],
+                        lang.$3.isNotEmpty
+                            ? lang.$3[0].toUpperCase()
+                            : lang.$2[0],
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           color: context.primary,
@@ -102,7 +109,9 @@ class _LanguageScreenState extends State<LanguageScreen> {
                   title: Text(
                     lang.$2,
                     style: TextStyle(
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: isSelected ? context.primary : context.onSurface,
                     ),
                   ),
@@ -112,7 +121,10 @@ class _LanguageScreenState extends State<LanguageScreen> {
                   ),
                   trailing: isSelected
                       ? Icon(Icons.check_circle, color: context.primary)
-                      : Icon(Icons.radio_button_unchecked, color: context.onSurfaceVariant),
+                      : Icon(
+                          Icons.radio_button_unchecked,
+                          color: context.onSurfaceVariant,
+                        ),
                 );
               },
             ),

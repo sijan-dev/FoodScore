@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../app/tokens.dart';
+import '../shared/app_icon_button.dart';
 
 class ContributeBarcodeUploadScreen extends StatefulWidget {
   const ContributeBarcodeUploadScreen({super.key});
@@ -41,13 +42,17 @@ class _ContributeBarcodeUploadScreenState
     if (!_hasAnyImage) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Uploading $_pickedCount image${_pickedCount == 1 ? "" : "s"}...'),
+        content: Text(
+          'Uploading $_pickedCount image${_pickedCount == 1 ? "" : "s"}...',
+        ),
       ),
     );
     await Future.delayed(const Duration(seconds: 1));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Upload complete! Thanks for contributing.')),
+        const SnackBar(
+          content: Text('Upload complete! Thanks for contributing.'),
+        ),
       );
       Navigator.of(context).pop();
     }
@@ -64,9 +69,10 @@ class _ContributeBarcodeUploadScreenState
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
               child: Row(
                 children: [
-                  _IconButton(
+                  AppIconButton(
                     icon: Icons.close,
                     onTap: () => Navigator.of(context).pop(),
+                    semanticLabel: 'Close',
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -188,30 +194,6 @@ class _ContributeBarcodeUploadScreenState
   }
 }
 
-class _IconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _IconButton({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: context.surfaceContainer,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: context.onSurface),
-      ),
-    );
-  }
-}
-
 class _UploadCard extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -298,8 +280,16 @@ class _UploadCard extends StatelessWidget {
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: hasImage
-                  ? Icon(Icons.check_circle, color: context.primary, key: ValueKey('check'))
-                  : Icon(Icons.upload_file, color: context.onSurfaceVariant, key: ValueKey('upload')),
+                  ? Icon(
+                      Icons.check_circle,
+                      color: context.primary,
+                      key: ValueKey('check'),
+                    )
+                  : Icon(
+                      Icons.upload_file,
+                      color: context.onSurfaceVariant,
+                      key: ValueKey('upload'),
+                    ),
             ),
           ],
         ),
@@ -340,9 +330,9 @@ class _InfoCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Text(
