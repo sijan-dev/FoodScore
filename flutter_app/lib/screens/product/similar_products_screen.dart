@@ -1,17 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/tokens.dart';
 import '../../models/product.dart';
+import '../../state/home_providers.dart';
+import '../product/product_detail_screen.dart';
+import '../shared/product_image.dart';
 
-class SimilarProductsScreen extends StatelessWidget {
+class SimilarProductsScreen extends ConsumerStatefulWidget {
   const SimilarProductsScreen({super.key, required this.baseProduct});
 
   final Product baseProduct;
 
   @override
-  Widget build(BuildContext context) {
-    final alternatives = _buildAlternatives(baseProduct);
+  ConsumerState<SimilarProductsScreen> createState() => _SimilarProductsScreenState();
+}
 
+class _SimilarProductsScreenState extends ConsumerState<SimilarProductsScreen> {
+  Map<String, List<Product>> _results = {"similar": [], "healthier": []};
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final repo = ref.read(productRepositoryProvider);
+      final results = await repo.fetchSimilarProducts(widget.baseProduct.id);
+      if (!mounted) return;
+      setState(() {
+        _results = results;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
+
+  List<Product> get _similarProducts => _results["similar"] ?? [];
+  List<Product> get _healthierProducts => _results["healthier"] ?? [];
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.surface,
       appBar: AppBar(
@@ -23,19 +57,61 @@ class SimilarProductsScreen extends StatelessWidget {
           IconButton(onPressed: () {}, icon: const Icon(Icons.qr_code_2)),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-        children: [
-          _CurrentProductCard(product: baseProduct),
-          const SizedBox(height: 16),
-          _FilterChips(),
-          const SizedBox(height: 12),
-          for (final product in alternatives)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _AlternativeCard(product: product),
-            ),
-        ],
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _similarProducts.isEmpty && _healthierProducts.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Text(
+                      'No similar products found yet. Scan more products to get recommendations.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                )
+              : ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+                  children: [
+                    _CurrentProductCard(product: widget.baseProduct),
+                    if (_similarProducts.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      _SectionHeader(title: 'Similar Products'),
+                      const SizedBox(height: 10),
+                      for (final product in _similarProducts)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _AlternativeCard(product: product),
+                        ),
+                    ],
+                    if (_healthierProducts.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      _SectionHeader(title: 'Healthier Alternatives'),
+                      const SizedBox(height: 10),
+                      for (final product in _healthierProducts)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _AlternativeCard(product: product),
+                        ),
+                    ],
+                  ],
+                ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title});
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+        fontWeight: FontWeight.w700,
       ),
     );
   }
@@ -56,20 +132,12 @@ class _CurrentProductCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.network(
-              product.imageUrl,
-              width: 72,
-              height: 72,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                width: 72,
-                height: 72,
-                color: context.surfaceContainer,
-                child: const Icon(Icons.image_not_supported),
-              ),
-            ),
+          ProductImage(
+            imageUrl: product.imageUrl,
+            productName: product.name,
+            width: 72,
+            height: 72,
+            borderRadius: 16,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -99,79 +167,36 @@ class _CurrentProductCard extends StatelessWidget {
   }
 }
 
-class _FilterChips extends StatefulWidget {
-  @override
-  State<_FilterChips> createState() => _FilterChipsState();
-}
-
-class _FilterChipsState extends State<_FilterChips> {
-  int _selected = 0;
-  final List<String> _labels = const [
-    'Best Match',
-    'Lower Sugar',
-    'High Protein',
-    'Organic',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (context, index) {
-          final isActive = index == _selected;
-          return ChoiceChip(
-            label: Text(_labels[index]),
-            selected: isActive,
-            onSelected: (_) => setState(() => _selected = index),
-            selectedColor: context.primaryContainer,
-            labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: isActive ? context.onPrimary : context.onSurface,
-              fontWeight: FontWeight.w600,
-            ),
-          );
-        },
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
-        itemCount: _labels.length,
-      ),
-    );
-  }
-}
-
 class _AlternativeCard extends StatelessWidget {
   const _AlternativeCard({required this.product});
 
-  final _AlternativeProduct product;
+  final Product product;
 
   @override
   Widget build(BuildContext context) {
     final color = _scoreColor(product.score);
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: context.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(22),
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ProductDetailScreen(product: product),
+        ),
       ),
-      child: Row(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: context.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Row(
         children: [
           Stack(
             clipBehavior: Clip.none,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Image.network(
-                  product.imageUrl,
-                  width: 70,
-                  height: 70,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: 70,
-                    height: 70,
-                    color: context.surfaceContainer,
-                    child: const Icon(Icons.image_not_supported),
-                  ),
-                ),
+              ProductImage(
+                imageUrl: product.imageUrl,
+                productName: product.name,
+                width: 70,
+                height: 70,
               ),
               Positioned(
                 bottom: -6,
@@ -211,42 +236,12 @@ class _AlternativeCard extends StatelessWidget {
                     color: context.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    for (final tag in product.tags) _TagChip(label: tag),
-                  ],
-                ),
               ],
             ),
           ),
           const Icon(Icons.chevron_right),
         ],
       ),
-    );
-  }
-}
-
-class _TagChip extends StatelessWidget {
-  const _TagChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: context.surfaceContainer,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(
-          context,
-        ).textTheme.labelSmall?.copyWith(color: context.onSurfaceVariant),
       ),
     );
   }
@@ -285,46 +280,4 @@ Color _scoreColor(int score) {
   if (score >= 60) return AppColors.primary;
   if (score >= 40) return AppColors.moderate;
   return AppColors.error;
-}
-
-List<_AlternativeProduct> _buildAlternatives(Product base) {
-  return [
-    _AlternativeProduct(
-      name: 'Sprouted Oat Granola',
-      subtitle: 'Low sugar, high fiber',
-      score: 92,
-      imageUrl: base.imageUrl,
-      tags: const ['Organic', 'Nutri-Score A'],
-    ),
-    _AlternativeProduct(
-      name: 'Blueberry Protein Bites',
-      subtitle: 'Plant protein boost',
-      score: 88,
-      imageUrl: base.imageUrl,
-      tags: const ['High Protein', 'Low Sodium'],
-    ),
-    _AlternativeProduct(
-      name: 'Honey Almond Clusters',
-      subtitle: 'Balanced macros',
-      score: 82,
-      imageUrl: base.imageUrl,
-      tags: const ['Whole Grain', 'No Additives'],
-    ),
-  ];
-}
-
-class _AlternativeProduct {
-  const _AlternativeProduct({
-    required this.name,
-    required this.subtitle,
-    required this.score,
-    required this.imageUrl,
-    required this.tags,
-  });
-
-  final String name;
-  final String subtitle;
-  final int score;
-  final String imageUrl;
-  final List<String> tags;
 }

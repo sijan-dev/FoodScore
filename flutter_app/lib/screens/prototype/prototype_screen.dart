@@ -104,6 +104,7 @@ class PrototypeScreen extends StatelessWidget {
         sugarG: 2,
         fiberG: 3,
         fatG: 2,
+        saturatedFatG: 2,
       ),
       category: 'Plant-based beverages',
     );

@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from typing import List, Dict, Any, Optional
 from app.ml.recommender import find_similar_healthier
+from app.services.openfoodfacts import cdn_image_url
 
 def get_recommendations(user_id: Optional[str] = None, limit: int = 5, db: Session = None) -> List[Dict[str, Any]]:
     """Get product recommendations"""
@@ -32,13 +33,40 @@ def get_recommendations(user_id: Optional[str] = None, limit: int = 5, db: Sessi
         for r in rows
     ]
 
-def get_better_alternatives(product_id: str, db: Session) -> List[Dict[str, Any]]:
-    """Find nutritionally similar but healthier alternatives using KNN"""
+def get_better_alternatives(product_id: str, db: Session):
+    """Find nutritionally similar and healthier alternatives using KNN"""
     try:
-        results = find_similar_healthier(product_id, db, top_n=3)
-        for r in results:
-            r["improvement"] = f"{r['health_score']} health score"
-        return results
+        results = find_similar_healthier(product_id, db, top_n=5)
+        similar = results.get("similar", [])
+        healthier = results.get("healthier", [])
+
+        # Enrich with DB fields (batch query to avoid N+1)
+        all_ids = list({r["product_id"] for r in similar + healthier})
+        enriched = {}
+        if all_ids:
+            rows = db.execute(text("""
+                SELECT product_id, image_url, category, barcode, is_harmful
+                FROM products WHERE product_id = ANY(:ids)
+            """), {"ids": [str(pid) for pid in all_ids]}).fetchall()
+            for row in rows:
+                enriched[str(row.product_id)] = {
+                    "image_url": row.image_url or cdn_image_url(row.barcode),
+                    "category": row.category,
+                    "barcode": row.barcode,
+                    "is_harmful": row.is_harmful
+                }
+
+        def enrich(item):
+            pid = str(item["product_id"])
+            extra = enriched.get(pid, {})
+            item["improvement"] = f"{item['health_score']} health score"
+            item.update(extra)
+            return item
+
+        return {
+            "similar": [enrich(r) for r in similar],
+            "healthier": [enrich(r) for r in healthier]
+        }
     except Exception as e:
         print(f"Error getting ML alternatives: {e}")
-        return []
+        return {"similar": [], "healthier": []}

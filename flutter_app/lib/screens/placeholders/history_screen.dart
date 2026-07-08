@@ -6,6 +6,7 @@ import '../../models/scan_record.dart';
 import '../../providers/scan_history_provider.dart';
 import '../placeholders/settings_screen.dart';
 import '../product/product_detail_screen.dart';
+import '../shared/product_image.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
@@ -371,23 +372,11 @@ class _HistoryCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: Image.network(
-                record.product.imageUrl,
-                width: 58,
-                height: 58,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 58,
-                  height: 58,
-                  decoration: BoxDecoration(
-                    color: context.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(Icons.image_outlined, size: 24, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
-                ),
-              ),
+            ProductImage(
+              imageUrl: record.product.imageUrl,
+              productName: record.product.name,
+              width: 58,
+              height: 58,
             ),
             const SizedBox(width: 12),
             Expanded(

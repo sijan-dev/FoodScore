@@ -11,9 +11,9 @@ TIER_PENALTIES = {
 }
 
 NUTRIMENT_RULES = [
-    ("sugars_100g", 20, 10, 5),
-    ("saturated_fat_100g", 5, 2, 5),
-    ("salt_100g", 1.5, 0.6, 5),
+    ("sugars_100g", 15, 5, 5),
+    ("saturated_fat_100g", 4, 1.5, 5),
+    ("salt_100g", 1.0, 0.3, 5),
     ("fiber_100g", 3, 6, -5),
     ("proteins_100g", 5, 10, -3),
 ]
@@ -56,11 +56,12 @@ def compute_score(product_id: str, db: Session) -> dict:
 
     # Check additives against reference table
     if additives and len(additives) > 0:
+        additives_upper = [a.upper() for a in additives]
         additive_rows = db.execute(text("""
             SELECT e_number, common_name, risk_tier, is_banned
             FROM additive_reference
             WHERE e_number = ANY(:additives)
-        """), {"additives": additives}).fetchall()
+        """), {"additives": additives_upper}).fetchall()
 
         for e_num, name, tier, banned in additive_rows:
             if banned or tier == "harmful":
@@ -77,7 +78,7 @@ def compute_score(product_id: str, db: Session) -> dict:
     if not is_harmful and nutriments:
         nut_data = nutriments or {}
         for field, high, medium, penalty in NUTRIMENT_RULES:
-            value = nut_data.get(field, 0) or 0
+            value = nut_data.get(field) or nut_data.get(field.replace('_', '-', 1)) or 0
             if penalty > 0:
                 if value >= high:
                     score -= penalty
@@ -86,9 +87,11 @@ def compute_score(product_id: str, db: Session) -> dict:
             else:
                 if value >= medium:
                     score += abs(penalty)
+                elif value >= high:
+                    score += abs(penalty) // 2
 
     # NOVA modifier
-    nova_mod = {1: 5, 2: 0, 3: -5, 4: -10}
+    nova_mod = {1: 5, 2: 0, 3: -5, 4: -15}
     score += nova_mod.get(nova_group, 0)
 
     # Nutri-Score modifier — use ML prediction if not available

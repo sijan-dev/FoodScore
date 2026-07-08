@@ -6,6 +6,21 @@ from app.services.score_service import compute_score
 
 logger = logging.getLogger(__name__)
 
+
+def cdn_image_url(barcode: str | None) -> str | None:
+    """Generate OFF CDN image URL from barcode, or None if barcode is invalid."""
+    if not barcode or not isinstance(barcode, str) or not barcode.strip():
+        return None
+    bc = barcode.strip()
+    n = len(bc)
+    if n < 8:
+        return None
+    if n == 8:
+        p1, p2, p3 = bc[:3], bc[3:6], bc[6:]
+    else:
+        p1, p2, p3 = bc[:3], bc[3:7], bc[7:]
+    return f"https://images.openfoodfacts.org/images/products/{p1}/{p2}/{p3}/front.en.400.jpg"
+
 def _extract_selected_image(product: dict) -> str | None:
     """Fallback: extract image from selected_images nested structure."""
     selected = product.get("selected_images", {})
@@ -58,7 +73,7 @@ async def fetch_from_openfoodfacts(barcode: str) -> dict | None:
                 "category": product.get("categories", "").split(",")[0].strip() if product.get("categories") else None,
                 "image_url": image_url,
                 "ingredients_raw": product.get("ingredients_text", ""),
-                "additives": [a.replace("en:", "").strip() for a in product.get("additives_tags", []) if a],
+                "additives": [a.split(":", 1)[-1].strip().upper() for a in product.get("additives_tags", []) if a],
                 "nutriments": {
                     "sugars_100g": product.get("nutriments", {}).get("sugars_100g") or 0,
                     "saturated_fat_100g": product.get("nutriments", {}).get("saturated-fat_100g") or 0,
@@ -66,7 +81,7 @@ async def fetch_from_openfoodfacts(barcode: str) -> dict | None:
                     "fiber_100g": product.get("nutriments", {}).get("fiber_100g") or 0,
                     "proteins_100g": product.get("nutriments", {}).get("proteins_100g") or 0,
                 },
-                "nova_group": product.get("nova_group") or 0,
+                "nova_group": v if isinstance(v := product.get("nova_group"), int) and v >= 1 else None,
                 "nutri_score": product.get("nutriscore_grade", "").upper() if product.get("nutriscore_grade") else None,
             }
             
@@ -136,7 +151,10 @@ async def scan_barcode(barcode: str, db: Session) -> dict:
         logger.info(f"Computing health score for product: {product_id}")
         score_result = compute_score(product_id, db)
         
-        # Step 5: Return result
+        # Step 5: Commit both product creation and scoring in one transaction
+        db.commit()
+        
+        # Step 6: Return result
         logger.info(f"Successfully scanned and created product: {product_id}")
         return {
             "source": "openfoodfacts",

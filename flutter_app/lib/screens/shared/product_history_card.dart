@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/tokens.dart';
 import '../../models/product.dart';
+import 'product_image.dart';
 
 class ProductHistoryCard extends StatelessWidget {
   const ProductHistoryCard({
@@ -33,23 +34,12 @@ class ProductHistoryCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppColors.radiusSmall),
-                child: Image.network(
-                  product.imageUrl,
-                  width: 72,
-                  height: 72,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: context.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(AppColors.radiusSmall),
-                    ),
-                    child: Icon(Icons.image_outlined, size: 28, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
-                  ),
-                ),
+              ProductImage(
+                imageUrl: product.imageUrl,
+                productName: product.name,
+                width: 72,
+                height: 72,
+                borderRadius: AppColors.radiusSmall,
               ),
               const SizedBox(width: 12),
               Expanded(

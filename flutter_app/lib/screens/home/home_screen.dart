@@ -8,7 +8,8 @@ import '../../models/product.dart';
 import '../../models/scan_record.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/scan_history_provider.dart';
-import '../../services/search_service.dart';
+import '../../state/home_providers.dart' hide scanHistoryProvider;
+import '../shared/product_image.dart';
 import '../contribution/contribute_barcode_upload_screen.dart';
 import '../placeholders/settings_screen.dart';
 import '../product/product_detail_screen.dart';
@@ -62,7 +63,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
 
     try {
-      final results = await SearchService().searchProducts(query.trim());
+      final repo = ref.read(productRepositoryProvider);
+      final results = await repo.searchProducts(query.trim());
       if (!mounted) return;
       setState(() {
         _searchResults = results;
@@ -528,23 +530,11 @@ class _SearchResultsSection extends StatelessWidget {
                   ListTile(
                     onTap: () => onSelect(product),
                     contentPadding: EdgeInsets.zero,
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        product.imageUrl,
-                        width: 52,
-                        height: 52,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: context.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(Icons.image_outlined, size: 22, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
-                        ),
-                      ),
+                    leading: ProductImage(
+                      imageUrl: product.imageUrl,
+                      productName: product.name,
+                      width: 52,
+                      height: 52,
                     ),
                     title: Text(
                       product.name,
@@ -657,23 +647,11 @@ class _RecentScanCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: Image.network(
-                record.product.imageUrl,
-                width: 64,
-                height: 64,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: context.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(Icons.image_outlined, size: 26, color: context.onSurfaceVariant.withValues(alpha: 0.4)),
-                ),
-              ),
+            ProductImage(
+              imageUrl: record.product.imageUrl,
+              productName: record.product.name,
+              width: 64,
+              height: 64,
             ),
             const SizedBox(width: 12),
             Expanded(

@@ -142,27 +142,6 @@ BEGIN
     END IF;
 END $$;
 
--- Seed initial additive data
-INSERT INTO additive_reference (e_number, common_name, risk_tier, is_banned) VALUES
-('E102', 'Tartrazine', 'high', false),
-('E104', 'Quinoline Yellow', 'high', false),
-('E110', 'Sunset Yellow', 'high', false),
-('E124', 'Ponceau 4R', 'high', false),
-('E127', 'Erythrosine', 'medium', false),
-('E129', 'Allura Red', 'high', false),
-('E211', 'Sodium Benzoate', 'medium', false),
-('E220', 'Sulfur Dioxide', 'high', false),
-('E249', 'Potassium Nitrite', 'harmful', true),
-('E250', 'Sodium Nitrite', 'harmful', true),
-('E251', 'Sodium Nitrate', 'harmful', true),
-('E252', 'Potassium Nitrate', 'harmful', true),
-('E621', 'Monosodium Glutamate', 'medium', false),
-('E950', 'Acesulfame K', 'medium', false),
-('E951', 'Aspartame', 'medium', false),
-('E952', 'Cyclamic Acid', 'medium', false),
-('E954', 'Saccharin', 'medium', false),
-('E955', 'Sucralose', 'low', false)
-ON CONFLICT (e_number) DO NOTHING;
 -- FoodScore Additive Reference - Nepal/South Asia focused (100 entries)
 INSERT INTO additive_reference (e_number, common_name, risk_tier, is_banned) VALUES
 

@@ -100,6 +100,7 @@ class OpenFoodFactsDataSource {
       sugarG: _numToInt(nutriments['sugars_100g']),
       fiberG: _numToInt(nutriments['fiber_100g']),
       fatG: _numToInt(nutriments['fat_100g']),
+      saturatedFatG: _numToInt(nutriments['saturated_fat_100g'] ?? nutriments['saturated-fat_100g']),
       proteinG: _numToInt(nutriments['proteins_100g']),
       sodiumG: _numToInt(nutriments['sodium_100g']),
     );

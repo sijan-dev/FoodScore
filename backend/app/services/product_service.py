@@ -35,7 +35,6 @@ def create_product(data: dict, db: Session) -> str:
         "nutri": data.get("nutri_score"),
         "barcode": data.get("barcode"),
     })
-    db.commit()
     return product_id
 
 def get_product(product_id: str, db: Session):

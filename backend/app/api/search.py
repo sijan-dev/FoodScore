@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db
+from app.services.openfoodfacts import cdn_image_url
 
 router = APIRouter(prefix="/search", tags=["Search"])
 
@@ -13,6 +14,7 @@ def search_products(
 ):
     rows = db.execute(text("""
         SELECT product_id, name, brand, category, health_score, is_harmful,
+               image_url, barcode,
                GREATEST(
                    similarity(name, :q),
                    similarity(COALESCE(brand, ''), :q)
@@ -32,7 +34,9 @@ def search_products(
             "brand": r[2],
             "category": r[3],
             "health_score": r[4],
-            "is_harmful": r[5]
+            "is_harmful": r[5],
+            "image_url": r[6] or cdn_image_url(r[7]),
+            "barcode": r[7]
         }
         for r in rows
     ]
