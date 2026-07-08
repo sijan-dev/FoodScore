@@ -1,5 +1,4 @@
-git commit -m "Feat: Finalize WHO scoring algorithm updates, product image fallback widgets, and recommendation system enhancements"
-git push origin devimport 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class ProductImage extends StatelessWidget {
   const ProductImage({
