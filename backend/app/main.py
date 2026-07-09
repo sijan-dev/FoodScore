@@ -23,7 +23,7 @@ from app.api import products, score as score_router, search, auth
 from app.api import scan
 app = FastAPI(
     title="FoodScore API",
-    version="1.0.0",
+    version="1.1.0",
     redoc_url=None,   # Disable the built-in ReDoc
 )
 @app.get("/redoc", include_in_schema=False)
@@ -100,7 +100,7 @@ def health_check(db: Session = Depends(get_db)):
         return {
             "status": "healthy",
             "service": "FoodScore API",
-            "version": "1.0.0"
+            "version": "1.1.0"
         }
     except Exception as e:
         return JSONResponse(
