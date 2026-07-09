@@ -7,6 +7,22 @@ import '../models/additive_flag.dart';
 import '../models/nutrition_facts.dart';
 import '../models/product.dart';
 
+String offCdnImageUrl(String barcode) {
+  final bc = barcode.trim();
+  if (bc.length < 8) return '';
+  String p1, p2, p3;
+  if (bc.length == 8) {
+    p1 = bc.substring(0, 3);
+    p2 = bc.substring(3, 6);
+    p3 = bc.substring(6);
+  } else {
+    p1 = bc.substring(0, 3);
+    p2 = bc.substring(3, 7);
+    p3 = bc.substring(7);
+  }
+  return 'https://images.openfoodfacts.org/images/products/$p1/$p2/$p3/front.en.400.jpg';
+}
+
 class BackendDataSource {
   BackendDataSource({http.Client? client}) : _client = client ?? http.Client();
 
@@ -35,7 +51,7 @@ class BackendDataSource {
     try {
       final uri = Uri.parse(
         '${AppConfig.apiBaseUrl}/search',
-      ).replace(queryParameters: <String, String>{'q': query});
+      ).replace(queryParameters: <String, String>{'q': query, 'limit': '$limit'});
 
       final response = await _client.get(uri);
       if (response.statusCode != 200) {
@@ -43,45 +59,41 @@ class BackendDataSource {
       }
 
       final items = jsonDecode(response.body) as List<dynamic>;
-      if (items.isEmpty) {
-        return <Product>[];
-      }
-
-      final results = <Product>[];
-      for (final item in items) {
-        final productId =
-            (item as Map<String, dynamic>)['product_id'] as String?;
-        if (productId == null) {
-          continue;
-        }
-        final detail = await _fetchProductById(productId);
-        if (detail != null) {
-          results.add(detail);
-          if (results.length >= limit) {
-            break;
-          }
-        }
-      }
-
-      return results;
+      return items
+          .whereType<Map<String, dynamic>>()
+          .map(_mapSearchResult)
+          .toList();
     } catch (_) {
       return <Product>[];
     }
   }
 
-  Future<Product?> _fetchProductById(String productId) async {
-    try {
-      final uri = Uri.parse('${AppConfig.apiBaseUrl}/products/$productId');
-      final response = await _client.get(uri);
-      if (response.statusCode != 200) {
-        return null;
-      }
-
-      final payload = jsonDecode(response.body) as Map<String, dynamic>;
-      return _mapBackendProduct(payload);
-    } catch (_) {
-      return null;
-    }
+  Product _mapSearchResult(Map<String, dynamic> json) {
+    final barcode = json['barcode'] as String? ?? '';
+    final imageUrl = json['image_url'] as String? ?? '';
+    return Product(
+      id: json['product_id'] as String? ?? '',
+      name: json['name'] as String? ?? 'Unknown Product',
+      subtitle: json['brand'] as String? ?? 'Unknown Brand',
+      imageUrl: imageUrl.isNotEmpty ? imageUrl : offCdnImageUrl(barcode),
+      score: (json['health_score'] as num?)?.toInt() ?? 0,
+      nutriScore: (json['nutri_score'] as String?)?.toUpperCase() ?? 'C',
+      novaGroup: (json['nova_group'] as num?)?.toInt() ?? 3,
+      ecoScore: (json['eco_score'] as String?)?.toUpperCase() ?? 'C',
+      insights: ['Score reflects overall nutritional balance and processing.'],
+      barcode: barcode,
+      nutrition: const NutritionFacts(
+        energyKcal: 0,
+        sugarG: 0,
+        fiberG: 0,
+      ),
+      category: json['category'] as String?,
+      additives: const [],
+      flaggedIngredients: const [],
+      isHarmful: json['is_harmful'] as bool? ?? false,
+      trafficLabel: null,
+      source: null,
+    );
   }
 
   Product _mapBackendProduct(Map<String, dynamic> json) {
@@ -95,9 +107,9 @@ class BackendDataSource {
       ),
       sugarG: _numToInt(nutriments['sugars_100g']),
       fiberG: _numToInt(nutriments['fiber_100g']),
-      fatG: _numToInt(nutriments['fat_100g']),
+      saturatedFatG: _numToInt(nutriments['saturated_fat_100g'] ?? nutriments['saturated-fat_100g']),
       proteinG: _numToInt(nutriments['proteins_100g']),
-      sodiumG: _numToInt(nutriments['sodium_100g']),
+      sodiumG: _numToInt(nutriments['salt_100g'] ?? nutriments['sodium_100g']),
     );
 
     final flagsRaw =
@@ -107,17 +119,19 @@ class BackendDataSource {
         .map(AdditiveFlag.fromJson)
         .toList();
 
+    final barcode = json['barcode'] as String? ?? '';
+    final imageUrl = json['image_url'] as String? ?? '';
     return Product(
       id: json['product_id'] as String? ?? '',
       name: json['name'] as String? ?? 'Unknown Product',
       subtitle: json['brand'] as String? ?? 'Unknown Brand',
-      imageUrl: json['image_url'] as String? ?? '',
+      imageUrl: imageUrl.isNotEmpty ? imageUrl : offCdnImageUrl(barcode),
       score: (json['health_score'] as num?)?.toInt() ?? 0,
-      nutriScore: (json['nutri_score'] as String? ?? 'C').toUpperCase(),
+      nutriScore: (json['nutri_score'] as String?)?.toUpperCase() ?? 'C',
       novaGroup: (json['nova_group'] as num?)?.toInt() ?? 3,
-      ecoScore: 'C',
+      ecoScore: (json['eco_score'] as String?)?.toUpperCase() ?? 'C',
       insights: _buildInsights(json['suggestion'] as String?, flags, nutrition),
-      barcode: json['barcode'] as String? ?? '',
+      barcode: barcode,
       nutrition: nutrition,
       category: json['category'] as String?,
       additives: _stringList(json['additives']),
@@ -127,6 +141,65 @@ class BackendDataSource {
           (json['traffic_light'] as Map<String, dynamic>?)?['label'] as String?,
       source: json['source'] as String?,
     );
+  }
+
+  Future<Product?> fetchProductById(String productId) async {
+    try {
+      final uri = Uri.parse('${AppConfig.apiBaseUrl}/products/$productId');
+      final response = await _client.get(uri);
+      if (response.statusCode != 200) return null;
+      final payload = jsonDecode(response.body) as Map<String, dynamic>;
+      if (payload['product_id'] == null) return null;
+      return _mapBackendProduct(payload);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Map<String, List<Product>>> fetchSimilarProducts(String productId) async {
+    try {
+      final uri = Uri.parse(
+          '${AppConfig.apiBaseUrl}/products/$productId/alternatives');
+      final response = await _client.get(uri);
+      if (response.statusCode != 200) return {"similar": [], "healthier": []};
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+      List<Product> mapList(String key) {
+        final items = data[key] as List<dynamic>? ?? [];
+        return items.whereType<Map<String, dynamic>>().map((item) {
+          final bc = item['barcode'] as String? ?? '';
+          final img = item['image_url'] as String? ?? '';
+          return Product(
+            id: item['product_id']?.toString() ?? '',
+            name: item['name'] as String? ?? 'Unknown',
+            subtitle: item['brand'] as String? ?? '',
+            imageUrl: img.isNotEmpty ? img : offCdnImageUrl(bc),
+            score: (item['health_score'] as num?)?.toInt() ?? 0,
+            nutriScore: (item['nutri_score'] as String?)?.toUpperCase() ?? 'C',
+            novaGroup: (item['nova_group'] as num?)?.toInt() ?? 3,
+            ecoScore: (item['eco_score'] as String?)?.toUpperCase() ?? 'C',
+            insights: [],
+            barcode: item['barcode'] as String? ?? '',
+            nutrition: const NutritionFacts(
+              energyKcal: 0,
+              sugarG: 0,
+              fiberG: 0,
+            ),
+            category: item['category'] as String?,
+            additives: const [],
+            flaggedIngredients: const [],
+            isHarmful: item['is_harmful'] as bool? ?? false,
+          );
+        }).toList();
+      }
+
+      return {
+        "similar": mapList("similar"),
+        "healthier": mapList("healthier"),
+      };
+    } catch (_) {
+      return {"similar": [], "healthier": []};
+    }
   }
 
   List<String> _stringList(dynamic input) {

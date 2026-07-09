@@ -25,13 +25,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   late AnimationController _pulseController;
   int _pulseCount = 0;
 
-  static const _pages = [WelcomePage(), ScanPage(), TrackingPage()];
+  static const _pages = [
+    WelcomePage(),
+    ScanPage(),
+    TrackingPage(),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(vsync: this, duration: 1.2.seconds)
-      ..addStatusListener(_onPulseStatus);
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: 1.2.seconds,
+    )..addStatusListener(_onPulseStatus);
     _pulseController.forward();
   }
 
@@ -138,31 +144,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 child: AnimatedBuilder(
                   animation: _pulseController,
                   builder: (context, child) {
-                    final scale = isLast
-                        ? 1.0 + (_pulseController.value * 0.03)
-                        : 1.0;
-                    return Transform.scale(scale: scale, child: child);
+                    final scale = isLast ? 1.0 + (_pulseController.value * 0.03) : 1.0;
+                    return Transform.scale(
+                      scale: scale,
+                      child: child,
+                    );
                   },
-                  child:
-                      FilledButton(
-                        onPressed: _nextPage,
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Text(
-                          isLast ? 'Get Started' : 'Continue',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ).animate().fadeIn(
-                        duration: 400.ms,
-                        delay: isLast ? 600.ms : 0.ms,
+                  child: FilledButton(
+                    onPressed: _nextPage,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
+                    ),
+                    child: Text(
+                      isLast ? 'Get Started' : 'Continue',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ).animate().fadeIn(duration: 400.ms, delay: isLast ? 600.ms : 0.ms),
                 ),
               ),
             ),
@@ -193,19 +193,15 @@ class _DotsIndicator extends StatelessWidget {
             width: isActive ? 22 : 8,
             height: 8,
             decoration: BoxDecoration(
-              color: isActive
-                  ? context.primary
-                  : context.onSurfaceVariant.withValues(alpha: 0.25),
+              color: isActive ? context.primary : context.onSurfaceVariant.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(4),
               boxShadow: isActive
-                  ? [
-                      BoxShadow(
-                        color: context.primary.withValues(alpha: 0.3),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ]
-                  : [],
+                  ? [BoxShadow(
+                      color: context.primary.withValues(alpha: 0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    )]
+                  : null,
             ),
           ),
         );

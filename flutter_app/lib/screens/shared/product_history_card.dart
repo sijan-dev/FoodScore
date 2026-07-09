@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/tokens.dart';
 import '../../models/product.dart';
+import 'product_image.dart';
 
 class ProductHistoryCard extends StatelessWidget {
   const ProductHistoryCard({
@@ -33,29 +34,12 @@ class ProductHistoryCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppColors.radiusSmall),
-                child: Image.network(
-                  product.imageUrl,
-                  width: 72,
-                  height: 72,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: context.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(
-                        AppColors.radiusSmall,
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.image_outlined,
-                      size: 28,
-                      color: context.onSurfaceVariant.withValues(alpha: 0.4),
-                    ),
-                  ),
-                ),
+              ProductImage(
+                imageUrl: product.imageUrl,
+                productName: product.name,
+                width: 72,
+                height: 72,
+                borderRadius: AppColors.radiusSmall,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -153,32 +137,30 @@ class ProductHistoryCard extends StatelessWidget {
   }
 
   Color _ecoBackground(String value, BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (value.toUpperCase()) {
       case 'A':
       case 'B':
-        return isDark ? const Color(0xFF1B3A1B) : const Color(0xFFD8F0DE);
+        return const Color(0xFFD8F0DE);
       case 'C':
-        return isDark ? const Color(0xFF3A2E0A) : const Color(0xFFF8E0A8);
+        return const Color(0xFFF8E0A8);
       case 'D':
       case 'E':
-        return isDark ? const Color(0xFF3A1A1A) : const Color(0xFFFFE3D8);
+        return const Color(0xFFFFE3D8);
       default:
         return context.surfaceContainer;
     }
   }
 
   Color _ecoForeground(String value, BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (value.toUpperCase()) {
       case 'A':
       case 'B':
-        return isDark ? const Color(0xFF81C784) : AppColors.additiveLow;
+        return AppColors.additiveLow;
       case 'C':
-        return isDark ? const Color(0xFFFFD54F) : AppColors.additiveMedium;
+        return AppColors.additiveMedium;
       case 'D':
       case 'E':
-        return isDark ? const Color(0xFFEF9A9A) : AppColors.additiveHigh;
+        return AppColors.additiveHigh;
       default:
         return context.onSurface;
     }

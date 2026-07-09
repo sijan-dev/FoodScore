@@ -4,7 +4,7 @@ from app.database import get_db
 from sqlalchemy import text
 from app.schemas.product import ProductCreate
 from app.services import product_service, score_service
-from app.services.openfoodfacts import scan_barcode
+from app.services.openfoodfacts import scan_barcode, cdn_image_url
 from app.services.recommendations_service import get_recommendations, get_better_alternatives
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -53,10 +53,11 @@ async def scan_barcode_endpoint(barcode: str, db: Session = Depends(get_db)):
     if not row:
         return result
 
+    img = row[4] or cdn_image_url(barcode)
     return {
         "source": result.get("source"),
         "product_id": row[0], "name": row[1], "brand": row[2],
-        "category": row[3], "image_url": row[4],
+        "category": row[3], "image_url": img,
         "health_score": row[5], "is_harmful": row[6],
         "nova_group": row[7], "nutri_score": row[8], "nutriments": row[9],
         "additives": row[10], "suggestion": row[11],
@@ -74,9 +75,11 @@ def get_product(product_id: str, db: Session = Depends(get_db)):
     row = product_service.get_product(product_id, db)
     if not row:
         raise HTTPException(status_code=404, detail="Product not found")
+    bc = db.execute(text("SELECT barcode FROM products WHERE product_id = :pid"), {"pid": product_id}).scalar()
+    img = row[4] or cdn_image_url(bc)
     return {
         "product_id": row[0], "name": row[1], "brand": row[2],
-        "category": row[3], "image_url": row[4],
+        "category": row[3], "image_url": img,
         "health_score": row[5], "is_harmful": row[6],
         "nova_group": row[7], "nutri_score": row[8], "nutriments": row[9],
         "additives": row[10], "suggestion": row[11],

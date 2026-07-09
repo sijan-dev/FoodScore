@@ -4,9 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/navigation.dart';
 import '../../app/tokens.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/nav_provider.dart';
 import '../../providers/theme_provider.dart';
-import '../shared/app_icon_button.dart';
 import '../profile/profile_setup_screen.dart';
 import '../settings/health_goals_screen.dart';
 import '../settings/privacy_screen.dart';
@@ -27,10 +25,9 @@ class SettingsScreen extends ConsumerWidget {
           children: [
             Row(
               children: [
-                AppIconButton(
+                _IconButton(
                   icon: Icons.arrow_back,
-                  onTap: () => ref.read(navIndexProvider.notifier).goTo(0),
-                  semanticLabel: 'Back to home',
+                  onTap: () => navIndex.value = 0,
                 ),
                 const Spacer(),
                 Text(
@@ -64,9 +61,7 @@ class SettingsScreen extends ConsumerWidget {
                   label: 'Profile',
                   onTap: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const ProfileSetupScreen(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const ProfileSetupScreen()),
                     );
                   },
                 ),
@@ -80,9 +75,7 @@ class SettingsScreen extends ConsumerWidget {
                   label: 'Health Goals',
                   onTap: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const HealthGoalsScreen(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const HealthGoalsScreen()),
                     );
                   },
                 ),
@@ -185,12 +178,32 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
+class _IconButton extends StatelessWidget {
+  const _IconButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: context.surfaceContainer,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(icon, color: context.onSurface),
+      ),
+    );
+  }
+}
+
 class _ToggleSettingsTile extends StatefulWidget {
-  const _ToggleSettingsTile({
-    required this.icon,
-    required this.label,
-    required this.prefKey,
-  });
+  const _ToggleSettingsTile({required this.icon, required this.label, required this.prefKey});
 
   final IconData icon;
   final String label;
@@ -238,9 +251,7 @@ class _ToggleSettingsTileState extends State<_ToggleSettingsTile> {
         ),
         title: Text(
           widget.label,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         trailing: Switch.adaptive(value: _value, onChanged: _toggle),
       ),
@@ -274,18 +285,16 @@ class _ProfileCard extends StatelessWidget {
           CircleAvatar(
             radius: 28,
             backgroundColor: context.primaryContainer.withValues(alpha: 0.2),
-            backgroundImage: avatarUrl != null
-                ? NetworkImage(avatarUrl!)
-                : null,
+            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
             child: avatarUrl == null
                 ? Icon(Icons.person, color: context.primary)
                 : null,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
                 Text(
                   name,
                   style: Theme.of(

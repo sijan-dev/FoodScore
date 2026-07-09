@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/tokens.dart';
+import '../../models/nutrition_facts.dart';
 import '../../models/product.dart';
+import '../../state/home_providers.dart';
 import '../../utils/goal_highlighter.dart';
-import '../shared/app_icon_button.dart';
-import '../shared/loading_widget.dart';
 import 'similar_products_screen.dart';
+import '../shared/product_image.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   const ProductDetailScreen({super.key, required this.product});
@@ -15,18 +16,39 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
   final Product product;
 
   @override
-  ConsumerState<ProductDetailScreen> createState() =>
-      _ProductDetailScreenState();
+  ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
 }
 
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   List<String> _goals = [];
   bool _goalsLoaded = false;
+  Product? _refreshedProduct;
+
+  Product get product => _refreshedProduct ?? widget.product;
 
   @override
   void initState() {
     super.initState();
     _loadGoals();
+    _refreshProduct();
+  }
+
+  Future<void> _refreshProduct() async {
+    final p = widget.product;
+    if (p.barcode.isEmpty && p.id.isEmpty) return;
+    try {
+      final repo = ref.read(productRepositoryProvider);
+      Product? fresh;
+      if (p.barcode.isNotEmpty) {
+        fresh = await repo.fetchProductByBarcode(p.barcode);
+      }
+      if (fresh == null && p.id.isNotEmpty) {
+        fresh = await repo.fetchProductById(p.id);
+      }
+      if (fresh != null && mounted) {
+        setState(() => _refreshedProduct = fresh);
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadGoals() async {
@@ -40,18 +62,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final product = widget.product;
+    final product = this.product;
     final tags = <String>{
       if ((product.category ?? '').isNotEmpty) product.category!,
       if (product.subtitle.isNotEmpty) product.subtitle,
     }.toList();
 
-    final hls = _goalsLoaded
-        ? GoalHighlighter.highlights(product, _goals)
-        : <GoalHighlight>[];
-    final scoreAdj = _goalsLoaded
-        ? GoalHighlighter.scoreAdjustment(product, _goals)
-        : 0;
+    final hls = _goalsLoaded ? GoalHighlighter.highlights(product, _goals) : <GoalHighlight>[];
+    final scoreAdj = _goalsLoaded ? GoalHighlighter.scoreAdjustment(product, _goals) : 0;
     final adjustedScore = (product.score + scoreAdj).clamp(0, 100);
     final prioritizedInsights = _goalsLoaded
         ? GoalHighlighter.prioritizeInsights(product, _goals, product.insights)
@@ -65,10 +83,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           children: [
             Row(
               children: [
-                AppIconButton(
+                _IconButton(
                   icon: Icons.arrow_back,
                   onTap: () => Navigator.of(context).pop(),
-                  semanticLabel: 'Go back',
                 ),
                 const Spacer(),
                 Container(
@@ -101,11 +118,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   ),
                 ),
                 const Spacer(),
-                AppIconButton(
-                  icon: Icons.bookmark_border,
-                  onTap: () {},
-                  semanticLabel: 'Bookmark',
-                ),
+                _IconButton(icon: Icons.bookmark_border, onTap: () {}),
               ],
             ),
             const SizedBox(height: 16),
@@ -124,29 +137,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               ),
               child: Column(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: Image.network(
-                      product.imageUrl,
-                      width: double.infinity,
-                      height: 180,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: double.infinity,
-                        height: 180,
-                        decoration: BoxDecoration(
-                          color: context.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Icon(
-                          Icons.image_outlined,
-                          size: 48,
-                          color: context.onSurfaceVariant.withValues(
-                            alpha: 0.4,
-                          ),
-                        ),
-                      ),
-                    ),
+                  ProductImage(
+                    imageUrl: product.imageUrl,
+                    productName: product.name,
+                    width: double.infinity,
+                    height: 180,
+                    borderRadius: 18,
                   ),
                   const SizedBox(height: 16),
                   Wrap(
@@ -185,13 +181,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               scoreAdj > 0
                                   ? '+$scoreAdj from goals'
                                   : '$scoreAdj from goals',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    color: scoreAdj > 0
-                                        ? AppColors.good
-                                        : AppColors.error,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: scoreAdj > 0 ? AppColors.good : AppColors.error,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                           const SizedBox(height: 4),
@@ -207,15 +200,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 ],
               ),
             ),
-            if (!_goalsLoaded) ...[
-              const SizedBox(height: 18),
-              _SectionTitle(title: 'Your Goals'),
-              const SizedBox(height: 10),
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: LoadingWidget(),
-              ),
-            ] else if (hls.isNotEmpty) ...[
+            if (hls.isNotEmpty) ...[
               const SizedBox(height: 18),
               _SectionTitle(title: 'Your Goals'),
               const SizedBox(height: 10),
@@ -225,6 +210,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             _SectionTitle(title: 'Nutrition Score'),
             const SizedBox(height: 10),
             _NutriScoreCard(score: product.nutriScore),
+            const SizedBox(height: 18),
+            _NutrimentsBreakdown(nutrition: product.nutrition),
             const SizedBox(height: 18),
             _SectionTitle(title: 'Health Impact'),
             const SizedBox(height: 10),
@@ -313,6 +300,30 @@ class _GoalBadge extends StatelessWidget {
   }
 }
 
+class _IconButton extends StatelessWidget {
+  const _IconButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: context.surfaceContainer,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(icon, color: context.onSurface),
+      ),
+    );
+  }
+}
+
 class _TagChip extends StatelessWidget {
   const _TagChip({required this.label});
 
@@ -387,6 +398,145 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
+class _NutrimentsBreakdown extends StatelessWidget {
+  const _NutrimentsBreakdown({required this.nutrition});
+
+  final NutritionFacts nutrition;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = [
+      _NutrientRow(
+        name: 'Sugar',
+        value: nutrition.sugarG,
+        unit: 'g',
+        level: nutrition.sugarG <= 5
+            ? _NutrientLevel.good
+            : nutrition.sugarG <= 22 ? _NutrientLevel.moderate : _NutrientLevel.high,
+        goodWhenHigh: false,
+      ),
+      _NutrientRow(
+        name: 'Saturated Fat',
+        value: nutrition.saturatedFatG,
+        unit: 'g',
+        level: nutrition.saturatedFatG <= 1
+            ? _NutrientLevel.good
+            : nutrition.saturatedFatG <= 5 ? _NutrientLevel.moderate : _NutrientLevel.high,
+        goodWhenHigh: false,
+      ),
+      _NutrientRow(
+        name: 'Salt',
+        value: nutrition.sodiumG,
+        unit: 'g',
+        level: nutrition.sodiumG <= 0
+            ? _NutrientLevel.good
+            : nutrition.sodiumG <= 1 ? _NutrientLevel.moderate : _NutrientLevel.high,
+        goodWhenHigh: false,
+      ),
+      _NutrientRow(
+        name: 'Fiber',
+        value: nutrition.fiberG,
+        unit: 'g',
+        level: nutrition.fiberG >= 6
+            ? _NutrientLevel.good
+            : nutrition.fiberG >= 3 ? _NutrientLevel.moderate : _NutrientLevel.high,
+        goodWhenHigh: true,
+      ),
+      _NutrientRow(
+        name: 'Protein',
+        value: nutrition.proteinG,
+        unit: 'g',
+        level: nutrition.proteinG >= 10
+            ? _NutrientLevel.good
+            : nutrition.proteinG >= 5 ? _NutrientLevel.moderate : _NutrientLevel.high,
+        goodWhenHigh: true,
+      ),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          for (final row in rows)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: row,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _NutrientLevel { good, moderate, high }
+
+class _NutrientRow extends StatelessWidget {
+  const _NutrientRow({
+    required this.name,
+    required this.value,
+    required this.unit,
+    required this.level,
+    this.goodWhenHigh = false,
+  });
+
+  final String name;
+  final int value;
+  final String unit;
+  final _NutrientLevel level;
+  final bool goodWhenHigh;
+
+  @override
+  Widget build(BuildContext context) {
+    final (color, label) = switch (level) {
+      _NutrientLevel.good => goodWhenHigh
+          ? (AppColors.good, 'High')
+          : (AppColors.good, 'Low'),
+      _NutrientLevel.moderate => (AppColors.moderate, 'Moderate'),
+      _NutrientLevel.high => goodWhenHigh
+          ? (AppColors.error, 'Low')
+          : (AppColors.error, 'High'),
+    };
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 110,
+          child: Text(
+            name,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            '$value$unit/100g',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _NutriScoreCard extends StatelessWidget {
   const _NutriScoreCard({required this.score});
 
@@ -407,9 +557,9 @@ class _NutriScoreCard extends StatelessWidget {
           Text(
             'NUTRI-SCORE',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: context.onSurfaceVariant,
-              letterSpacing: 1.2,
-            ),
+                  color: context.onSurfaceVariant,
+                  letterSpacing: 1.2,
+                ),
           ),
           const SizedBox(height: 10),
           Row(
@@ -431,23 +581,19 @@ class _NutriScoreCard extends StatelessWidget {
                       boxShadow: letter == active
                           ? [
                               BoxShadow(
-                                color: _nutriColor(
-                                  letter,
-                                ).withValues(alpha: 0.3),
+                                color: _nutriColor(letter).withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
-                              ),
+                              )
                             ]
                           : null,
                     ),
                     child: Text(
                       letter,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: letter == active
-                            ? Colors.white
-                            : _nutriColor(letter),
-                        fontWeight: FontWeight.w800,
-                      ),
+                            color: letter == active ? Colors.white : _nutriColor(letter),
+                            fontWeight: FontWeight.w800,
+                          ),
                     ),
                   ),
                 ),
@@ -483,11 +629,7 @@ class _HealthImpactList extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = insights.isNotEmpty
         ? insights.take(3).toList()
-        : <String>[
-            'High fiber supports digestion.',
-            'Low sodium helps heart health.',
-            'Moderate sugar content.',
-          ];
+        : <String>[];
 
     return Column(
       children: [
@@ -554,7 +696,9 @@ class _IngredientsList extends StatelessWidget {
 
     final items = ingredients.isNotEmpty
         ? ingredients.take(4).toList()
-        : <String>['Organic oats', 'Coconut sugar', 'Natural vanilla'];
+        : null;
+
+    if (items == null) return const _EmptyIngredients();
 
     return Column(
       children: [
@@ -576,6 +720,35 @@ class _IngredientsList extends StatelessWidget {
   }
 }
 
+class _EmptyIngredients extends StatelessWidget {
+  const _EmptyIngredients();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, size: 18, color: context.onSurfaceVariant),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'No ingredient data available.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: context.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _IngredientRow extends StatelessWidget {
   const _IngredientRow({required this.name, required this.riskLabel});
 
@@ -594,9 +767,9 @@ class _IngredientRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        color: context.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
+        border: Border(left: BorderSide(color: color, width: 4)),
       ),
       child: Row(
         children: [
@@ -659,7 +832,10 @@ class _InsightCard extends StatelessWidget {
                   color: context.primaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.auto_awesome, color: context.onPrimary),
+                child: Icon(
+                  Icons.auto_awesome,
+                  color: context.onPrimary,
+                ),
               ),
               const SizedBox(width: 10),
               Text(

@@ -1,9 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../providers/nav_provider.dart';
+import '../navigation.dart';
 
 class AppRouter {
-  static void goToHistory(WidgetRef ref) {
-    ref.read(navIndexProvider.notifier).goTo(1);
+  static void goToHistory() {
+    navIndex.value = 1;
   }
 }

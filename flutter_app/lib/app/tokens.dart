@@ -66,20 +66,6 @@ class AppColors {
   static const Color darkPrimaryFixed = Color(0xFFA5D6A7);
   static const Color darkPrimaryFixedDim = Color(0xFF388E3C);
 
-  // Scanner-specific overlay colors
-  static const Color scannerBg = Color(0xFF000000);
-  static const Color scannerOverlayTop = Color(0x99000000);
-  static const Color scannerOverlayMid = Color(0x33000000);
-  static const Color scannerOverlayBottom = Color(0xB3000000);
-  static const Color scannerButtonBg = Color(0x33FFFFFF);
-  static const Color scannerButtonBorder = Color(0x3DFFFFFF);
-  static const Color scannerFrameBorder = Color(0x4DFFFFFF);
-  static const Color scannerCorner = Color(0xFFFFFFFF);
-  static const Color scannerText = Color(0xB3FFFFFF);
-  static const Color scannerPillBg = Color(0x29FFFFFF);
-  static const Color scannerPillBorder = Color(0x3DFFFFFF);
-  static const Color scannerGalleryBorder = Color(0xB3FFFFFF);
-
   static const double radiusSmall = 8;
   static const double radiusMedium = 12;
   static const double radiusLarge = 24;
@@ -87,19 +73,14 @@ class AppColors {
 
 extension ThemeColors on BuildContext {
   Color get surface => Theme.of(this).colorScheme.surface;
-  Color get surfaceContainerLowest =>
-      Theme.of(this).colorScheme.surfaceContainerLowest;
-  Color get surfaceContainerLow =>
-      Theme.of(this).colorScheme.surfaceContainerLow;
+  Color get surfaceContainerLowest => Theme.of(this).colorScheme.surfaceContainerLowest;
+  Color get surfaceContainerLow => Theme.of(this).colorScheme.surfaceContainerLow;
   Color get surfaceContainer => Theme.of(this).colorScheme.surfaceContainer;
-  Color get surfaceContainerHigh =>
-      Theme.of(this).colorScheme.surfaceContainerHigh;
-  Color get surfaceContainerHighest =>
-      Theme.of(this).colorScheme.surfaceContainerHighest;
+  Color get surfaceContainerHigh => Theme.of(this).colorScheme.surfaceContainerHigh;
+  Color get surfaceContainerHighest => Theme.of(this).colorScheme.surfaceContainerHighest;
   Color get onSurface => Theme.of(this).colorScheme.onSurface;
   Color get onSurfaceVariant => Theme.of(this).colorScheme.onSurfaceVariant;
-  Color get surfaceVariant =>
-      Theme.of(this).colorScheme.surfaceContainerHighest;
+  Color get surfaceVariant => Theme.of(this).colorScheme.surfaceContainerHighest;
   Color get surfaceDim => Theme.of(this).colorScheme.surfaceDim;
   Color get outline => Theme.of(this).colorScheme.outline;
   Color get outlineVariant => Theme.of(this).colorScheme.outlineVariant;

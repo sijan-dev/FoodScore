@@ -72,8 +72,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                       _PrivacyToggle(
                         icon: Icons.analytics_outlined,
                         label: 'Share Analytics',
-                        description:
-                            'Help us improve with anonymous usage data',
+                        description: 'Help us improve with anonymous usage data',
                         value: _shareAnalytics,
                         onChanged: (v) {
                           setState(() => _shareAnalytics = v);
@@ -128,10 +127,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                             color: context.surfaceContainer,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(
-                            Icons.download_outlined,
-                            color: context.onSurface,
-                          ),
+                          child: Icon(Icons.download_outlined, color: context.onSurface),
                         ),
                         title: const Text('Download My Data'),
                         subtitle: const Text('Get a copy of your data'),
@@ -154,10 +150,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                             color: context.surfaceContainer,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(
-                            Icons.delete_outline,
-                            color: context.error,
-                          ),
+                          child: Icon(Icons.delete_outline, color: context.error),
                         ),
                         title: Text(
                           'Delete Account',
@@ -183,9 +176,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                                     Navigator.of(ctx).pop();
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text(
-                                          'Account deletion coming soon.',
-                                        ),
+                                        content: Text('Account deletion coming soon.'),
                                         behavior: SnackBarBehavior.floating,
                                       ),
                                     );
@@ -213,20 +204,15 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: context.primary,
-                        size: 20,
-                      ),
+                      Icon(Icons.info_outline, color: context.primary, size: 20),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           'Your privacy matters. We only collect data needed to provide accurate food scores and recommendations. No data is sold to third parties.',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: context.onSurfaceVariant,
-                                height: 1.4,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: context.onSurfaceVariant,
+                            height: 1.4,
+                          ),
                         ),
                       ),
                     ],
@@ -267,15 +253,15 @@ class _PrivacyToggle extends StatelessWidget {
       ),
       title: Text(
         label,
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
       ),
       subtitle: Text(
         description,
-        style: Theme.of(
-          context,
-        ).textTheme.bodySmall?.copyWith(color: context.onSurfaceVariant),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: context.onSurfaceVariant,
+        ),
       ),
       trailing: Switch.adaptive(value: value, onChanged: onChanged),
     );

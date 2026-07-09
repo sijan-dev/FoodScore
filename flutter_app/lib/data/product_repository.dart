@@ -22,6 +22,14 @@ class ProductRepository {
     );
   }
 
+  Future<Product?> fetchProductById(String productId) {
+    return _backend.fetchProductById(productId);
+  }
+
+  Future<Map<String, List<Product>>> fetchSimilarProducts(String productId) {
+    return _backend.fetchSimilarProducts(productId);
+  }
+
   Future<Product?> _fetchWithFallback(
     Future<Product?> Function() primary,
     Future<Product?> Function() fallback,

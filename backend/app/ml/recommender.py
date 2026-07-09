@@ -23,7 +23,7 @@ def fetch_feature_matrix(db: Session, category: str = None):
     product_ids, names, brands, scores, vectors = [], [], [], [], []
     for r in rows:
         nut = r.nutriments or {}
-        vec = [nut.get(f, 0) or 0 for f in FEATURE_FIELDS]
+        vec = [nut.get(f) or nut.get(f.replace('_', '-', 1)) or 0 for f in FEATURE_FIELDS]
         product_ids.append(r.product_id)
         names.append(r.name)
         brands.append(r.brand)
@@ -34,21 +34,25 @@ def fetch_feature_matrix(db: Session, category: str = None):
 
 
 def find_similar_healthier(product_id: str, db: Session, top_n: int = 5):
-    """Find nutritionally similar products with a higher health_score"""
+    """Find nutritionally similar products.
+    Returns {"similar": [...], "healthier": [...]} where:
+      - similar: same category, any score, sorted by nutritional similarity
+      - healthier: same category, strictly higher score only
+    """
     row = db.execute(text("""
         SELECT nutriments, category, health_score FROM products WHERE product_id = :pid
     """), {"pid": product_id}).fetchone()
 
     if not row or not row.nutriments:
-        return []
+        return {"similar": [], "healthier": []}
 
-    target_vec = np.array([[row.nutriments.get(f, 0) or 0 for f in FEATURE_FIELDS]])
+    target_vec = np.array([[row.nutriments.get(f) or row.nutriments.get(f.replace('_', '-', 1)) or 0 for f in FEATURE_FIELDS]])
     current_score = row.health_score or 0
 
     ids, names, brands, scores, matrix = fetch_feature_matrix(db, category=row.category)
 
     if len(matrix) < 2:
-        return []
+        return {"similar": [], "healthier": []}
 
     n_neighbors = min(top_n + 5, len(matrix))
     model = NearestNeighbors(n_neighbors=n_neighbors, metric="euclidean")
@@ -56,20 +60,22 @@ def find_similar_healthier(product_id: str, db: Session, top_n: int = 5):
 
     distances, indices = model.kneighbors(target_vec)
 
-    results = []
+    similar = []
+    healthier = []
+
     for dist, idx in zip(distances[0], indices[0]):
         if str(ids[idx]) == str(product_id):
             continue
-        if scores[idx] is None or scores[idx] <= current_score:
-            continue
-        results.append({
+        entry = {
             "product_id": ids[idx],
             "name": names[idx],
             "brand": brands[idx],
             "health_score": scores[idx],
             "similarity_distance": round(float(dist), 2)
-        })
-        if len(results) >= top_n:
-            break
+        }
+        if len(similar) < top_n:
+            similar.append(entry)
+        if scores[idx] is not None and scores[idx] > current_score and len(healthier) < top_n:
+            healthier.append(entry)
 
-    return results
+    return {"similar": similar, "healthier": healthier}

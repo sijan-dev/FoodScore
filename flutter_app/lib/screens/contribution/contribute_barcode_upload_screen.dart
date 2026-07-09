@@ -2,12 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
-
-import '../shared/error_state_widget.dart';
 
 import '../../app/tokens.dart';
-import '../shared/app_icon_button.dart';
 
 class ContributeBarcodeUploadScreen extends StatefulWidget {
   const ContributeBarcodeUploadScreen({super.key});
@@ -26,26 +22,14 @@ class _ContributeBarcodeUploadScreenState
     'ingredients': null,
   };
 
-  bool _isUploading = false;
-  bool _uploadError = false;
-
   Future<void> _pickImage(String key) async {
-    final status = await Permission.camera.request();
-    if (!status.isGranted) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Camera permission required to take photos.')),
-        );
-      }
-      return;
-    }
     final file = await _picker.pickImage(
       source: ImageSource.camera,
       maxWidth: 1920,
       maxHeight: 1920,
       imageQuality: 85,
     );
-    if (file != null && mounted) {
+    if (file != null) {
       setState(() => _images[key] = file);
     }
   }
@@ -54,25 +38,18 @@ class _ContributeBarcodeUploadScreenState
   int get _pickedCount => _images.values.where((f) => f != null).length;
 
   Future<void> _upload() async {
-    if (!_hasAnyImage || _isUploading) return;
-    setState(() {
-      _isUploading = true;
-      _uploadError = false;
-    });
-    try {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return;
-      setState(() => _isUploading = false);
+    if (!_hasAnyImage) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Uploading $_pickedCount image${_pickedCount == 1 ? "" : "s"}...'),
+      ),
+    );
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Upload complete! Thanks for contributing.')),
       );
       Navigator.of(context).pop();
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _isUploading = false;
-        _uploadError = true;
-      });
     }
   }
 
@@ -87,10 +64,9 @@ class _ContributeBarcodeUploadScreenState
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
               child: Row(
                 children: [
-                  AppIconButton(
+                  _IconButton(
                     icon: Icons.close,
                     onTap: () => Navigator.of(context).pop(),
-                    semanticLabel: 'Close',
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -170,15 +146,6 @@ class _ContributeBarcodeUploadScreenState
                     message:
                         'Your photos help improve our accuracy and product database.',
                   ),
-                  if (_uploadError)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: ErrorStateWidget(
-                        message: 'Upload failed. Please try again.',
-                        retryLabel: 'Retry',
-                        onRetry: _upload,
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -205,19 +172,10 @@ class _ContributeBarcodeUploadScreenState
                   const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton(
-                      onPressed: _hasAnyImage && !_isUploading ? _upload : null,
-                      child: _isUploading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              _hasAnyImage ? 'Upload ($_pickedCount)' : 'Upload',
-                            ),
+                      onPressed: _hasAnyImage ? _upload : null,
+                      child: Text(
+                        _hasAnyImage ? 'Upload ($_pickedCount)' : 'Upload',
+                      ),
                     ),
                   ),
                 ],
@@ -225,6 +183,30 @@ class _ContributeBarcodeUploadScreenState
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _IconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _IconButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: context.surfaceContainer,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(icon, color: context.onSurface),
       ),
     );
   }
@@ -316,16 +298,8 @@ class _UploadCard extends StatelessWidget {
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: hasImage
-                  ? Icon(
-                      Icons.check_circle,
-                      color: context.primary,
-                      key: ValueKey('check'),
-                    )
-                  : Icon(
-                      Icons.upload_file,
-                      color: context.onSurfaceVariant,
-                      key: ValueKey('upload'),
-                    ),
+                  ? Icon(Icons.check_circle, color: context.primary, key: ValueKey('check'))
+                  : Icon(Icons.upload_file, color: context.onSurfaceVariant, key: ValueKey('upload')),
             ),
           ],
         ),
@@ -366,9 +340,9 @@ class _InfoCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(

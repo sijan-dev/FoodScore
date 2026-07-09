@@ -12,6 +12,7 @@ class AuthScreen extends ConsumerStatefulWidget {
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
+
   bool _isRegisterMode = false;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -49,9 +50,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         return;
       }
       if (password.length < 6) {
-        ref
-            .read(authProvider.notifier)
-            .setError('Password must be at least 6 characters');
+        ref.read(authProvider.notifier).setError('Password must be at least 6 characters');
         return;
       }
       ref.read(authProvider.notifier).register(username, email, password);
@@ -61,9 +60,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   bool _isValidEmail(String email) {
-    return RegExp(
-      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-    ).hasMatch(email);
+    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(email);
   }
 
   @override
@@ -119,9 +116,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    border: Border.all(
-                      color: context.error.withValues(alpha: 0.3),
-                    ),
+                    border: Border.all(color: context.error.withValues(alpha: 0.3)),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -149,74 +144,76 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 onTap: () => ref.read(authProvider.notifier).signInWithGoogle(),
               ),
               const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  border: Border.all(color: context.outlineVariant, width: 1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    if (_isRegisterMode) ...[
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: context.outlineVariant, width: 1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      if (_isRegisterMode) ...[
+                        _AuthField(
+                          controller: _usernameController,
+                          label: 'Username',
+                          icon: Icons.person_outline,
+                        ),
+                        const SizedBox(height: 14),
+                      ],
                       _AuthField(
-                        controller: _usernameController,
-                        label: 'Username',
-                        icon: Icons.person_outline,
+                        controller: _emailController,
+                        label: 'Email',
+                        icon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
                       ),
                       const SizedBox(height: 14),
+                      _AuthField(
+                        controller: _passwordController,
+                        label: 'Password',
+                        icon: Icons.lock_outline,
+                        isPassword: true,
+                        obscureText: _obscurePassword,
+                        onToggleVisibility: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: _submit,
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            _isRegisterMode ? 'Create Account' : 'Sign In',
+                            style: const TextStyle(letterSpacing: 1),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Center(
+                        child: TextButton(
+                          onPressed: () => setState(
+                            () => _isRegisterMode = !_isRegisterMode,
+                          ),
+                          child: Text(
+                            _isRegisterMode
+                                ? 'Already have an account? Sign in'
+                                : 'Don\'t have an account? Register',
+                            style: TextStyle(
+                              color: context.primary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
-                    _AuthField(
-                      controller: _emailController,
-                      label: 'Email',
-                      icon: Icons.email_outlined,
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 14),
-                    _AuthField(
-                      controller: _passwordController,
-                      label: 'Password',
-                      icon: Icons.lock_outline,
-                      isPassword: true,
-                      obscureText: _obscurePassword,
-                      onToggleVisibility: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: _submit,
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          _isRegisterMode ? 'Create Account' : 'Sign In',
-                          style: const TextStyle(letterSpacing: 1),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: TextButton(
-                        onPressed: () =>
-                            setState(() => _isRegisterMode = !_isRegisterMode),
-                        child: Text(
-                          _isRegisterMode
-                              ? 'Already have an account? Sign in'
-                              : 'Don\'t have an account? Register',
-                          style: TextStyle(
-                            color: context.primary,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
               const SizedBox(height: 32),
               TextButton(
                 onPressed: () => ref.read(authProvider.notifier).skipToApp(),
@@ -287,9 +284,7 @@ class _AuthField extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: context.outlineVariant.withValues(alpha: 0.5),
-          ),
+          borderSide: BorderSide(color: context.outlineVariant.withValues(alpha: 0.5)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -297,10 +292,7 @@ class _AuthField extends StatelessWidget {
         ),
         filled: true,
         fillColor: context.surface,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }

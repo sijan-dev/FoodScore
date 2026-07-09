@@ -16,48 +16,13 @@ class _HealthGoalsScreenState extends ConsumerState<HealthGoalsScreen> {
   bool _loading = true;
 
   static const _goals = [
-    (
-      'weight',
-      'Weight Management',
-      Icons.monitor_weight,
-      'Track calories and portion control',
-    ),
-    (
-      'wellness',
-      'General Wellness',
-      Icons.favorite,
-      'Eat balanced, feel great',
-    ),
-    (
-      'dietary',
-      'Dietary Monitoring',
-      Icons.warning_amber,
-      'Avoid allergens and additives',
-    ),
-    (
-      'muscle',
-      'Muscle & Fitness',
-      Icons.fitness_center,
-      'High protein, nutrient-dense foods',
-    ),
-    (
-      'heart',
-      'Heart Health',
-      Icons.favorite_border,
-      'Low sodium, heart-friendly foods',
-    ),
-    (
-      'digestive',
-      'Digestive Health',
-      Icons.self_improvement,
-      'High fiber and probiotic foods',
-    ),
-    (
-      'vegan',
-      'Vegan / Plant-Based',
-      Icons.eco,
-      'Plant-based nutrition tracking',
-    ),
+    ('weight', 'Weight Management', Icons.monitor_weight, 'Track calories and portion control'),
+    ('wellness', 'General Wellness', Icons.favorite, 'Eat balanced, feel great'),
+    ('dietary', 'Dietary Monitoring', Icons.warning_amber, 'Avoid allergens and additives'),
+    ('muscle', 'Muscle & Fitness', Icons.fitness_center, 'High protein, nutrient-dense foods'),
+    ('heart', 'Heart Health', Icons.favorite_border, 'Low sodium, heart-friendly foods'),
+    ('digestive', 'Digestive Health', Icons.self_improvement, 'High fiber and probiotic foods'),
+    ('vegan', 'Vegan / Plant-Based', Icons.eco, 'Plant-based nutrition tracking'),
     ('low_carb', 'Low Carb', Icons.bakery_dining, 'Reduce carbohydrate intake'),
   ];
 
@@ -119,18 +84,16 @@ class _HealthGoalsScreenState extends ConsumerState<HealthGoalsScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                ..._goals.map(
-                  (g) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _GoalCard(
-                      icon: g.$3,
-                      title: g.$2,
-                      subtitle: g.$4,
-                      selected: _selected.contains(g.$1),
-                      onTap: () => _toggle(g.$1),
-                    ),
+                ..._goals.map((g) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _GoalCard(
+                    icon: g.$3,
+                    title: g.$2,
+                    subtitle: g.$4,
+                    selected: _selected.contains(g.$1),
+                    onTap: () => _toggle(g.$1),
                   ),
-                ),
+                )),
               ],
             ),
     );
@@ -172,10 +135,7 @@ class _GoalCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              color: selected ? context.primary : context.onSurfaceVariant,
-            ),
+            Icon(icon, color: selected ? context.primary : context.onSurfaceVariant),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -190,10 +150,7 @@ class _GoalCard extends StatelessWidget {
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.onSurfaceVariant,
-                    ),
+                    style: TextStyle(fontSize: 12, color: context.onSurfaceVariant),
                   ),
                 ],
               ),

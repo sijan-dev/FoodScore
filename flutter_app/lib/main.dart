@@ -14,7 +14,8 @@ void main() async {
 
   final container = ProviderContainer(
     overrides: [
-      preloadedOnboardingCompleteProvider.overrideWithValue(onboardingComplete),
+      preloadedOnboardingCompleteProvider
+          .overrideWithValue(onboardingComplete),
     ],
   );
   container.read(themeModeProvider.notifier).set(_parseThemeMode(themePref));

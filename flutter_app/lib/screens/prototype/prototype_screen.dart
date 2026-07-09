@@ -33,9 +33,9 @@ class PrototypeScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Use this hub to preview the implemented UI screens.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: context.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: context.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 16),
             _NavCard(
@@ -104,6 +104,7 @@ class PrototypeScreen extends StatelessWidget {
         sugarG: 2,
         fiberG: 3,
         fatG: 2,
+        saturatedFatG: 2,
       ),
       category: 'Plant-based beverages',
     );
