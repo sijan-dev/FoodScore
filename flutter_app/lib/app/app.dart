@@ -52,10 +52,9 @@ class _AppEntryState extends ConsumerState<AppEntry> {
       return const OnboardingScreen();
     }
 
-    if (auth.status == AuthStatus.initial || auth.status == AuthStatus.loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+    if (auth.status == AuthStatus.initial ||
+        auth.status == AuthStatus.loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (auth.status == AuthStatus.guest ||

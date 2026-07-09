@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
-
-// Simple global navigation index for the app shell (avoids Riverpod provider mismatch)
-final ValueNotifier<int> navIndex = ValueNotifier<int>(0);
+// Navigation state is now managed via navIndexProvider in lib/providers/nav_provider.dart
+// This file remains as a barrel for navigation utilities.
+export '../providers/nav_provider.dart';
