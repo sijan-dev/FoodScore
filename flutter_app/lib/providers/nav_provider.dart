@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final navIndexProvider = NotifierProvider<NavIndexNotifier, int>(
@@ -10,3 +11,5 @@ class NavIndexNotifier extends Notifier<int> {
 
   void goTo(int index) => state = index;
 }
+
+ValueNotifier<int> navIndex = ValueNotifier(0);
