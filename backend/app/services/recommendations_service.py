@@ -11,7 +11,7 @@ def get_recommendations(user_id: Optional[str] = None, limit: int = 5, db: Sessi
     
     try:
         rows = db.execute(text("""
-            SELECT product_id, name, brand, health_score, is_harmful
+            SELECT product_id, name, brand, health_score, is_harmful, image_url, barcode
             FROM products
             WHERE health_score >= 70 AND is_harmful = FALSE
             ORDER BY health_score DESC
@@ -28,6 +28,8 @@ def get_recommendations(user_id: Optional[str] = None, limit: int = 5, db: Sessi
             "brand": r[2],
             "health_score": r[3],
             "is_harmful": r[4],
+            "image_url": r[5] or cdn_image_url(r[6]),
+            "barcode": r[6],
             "reason": "High nutritional quality" if r[3] >= 80 else "Good nutritional value"
         }
         for r in rows
@@ -46,7 +48,7 @@ def get_better_alternatives(product_id: str, db: Session):
         if all_ids:
             rows = db.execute(text("""
                 SELECT product_id, image_url, category, barcode, is_harmful
-                FROM products WHERE product_id = ANY(:ids)
+                FROM products WHERE product_id::text = ANY(:ids)
             """), {"ids": [str(pid) for pid in all_ids]}).fetchall()
             for row in rows:
                 enriched[str(row.product_id)] = {

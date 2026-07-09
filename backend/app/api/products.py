@@ -23,7 +23,8 @@ def list_products(
     rows = product_service.list_products(db, skip, limit)
     return [
         {"product_id": r[0], "name": r[1], "brand": r[2],
-         "health_score": r[3], "is_harmful": r[4]}
+         "health_score": r[3], "is_harmful": r[4],
+         "image_url": r[5], "barcode": r[6]}
         for r in rows
     ]
 
