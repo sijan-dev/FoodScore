@@ -7,6 +7,15 @@ import '../models/additive_flag.dart';
 import '../models/nutrition_facts.dart';
 import '../models/product.dart';
 
+String proxyImageUrl(String url) {
+  if (url.isEmpty) return '';
+  // images.openfoodfacts.org is blocked on some networks; use world.openfoodfacts.org instead
+  if (url.startsWith('https://images.openfoodfacts.org/')) {
+    return url.replaceFirst('https://images.openfoodfacts.org/', 'https://world.openfoodfacts.org/');
+  }
+  return url;
+}
+
 String offCdnImageUrl(String barcode) {
   final bc = barcode.trim();
   if (bc.length < 8) return '';
@@ -20,7 +29,7 @@ String offCdnImageUrl(String barcode) {
     p2 = bc.substring(3, 7);
     p3 = bc.substring(7);
   }
-  return 'https://images.openfoodfacts.org/images/products/$p1/$p2/$p3/front.en.400.jpg';
+  return 'https://world.openfoodfacts.org/images/products/$p1/$p2/$p3/front.en.400.jpg';
 }
 
 class BackendDataSource {
@@ -75,7 +84,7 @@ class BackendDataSource {
       id: json['product_id'] as String? ?? '',
       name: json['name'] as String? ?? 'Unknown Product',
       subtitle: json['brand'] as String? ?? 'Unknown Brand',
-      imageUrl: imageUrl.isNotEmpty ? imageUrl : offCdnImageUrl(barcode),
+      imageUrl: imageUrl.isNotEmpty ? proxyImageUrl(imageUrl) : offCdnImageUrl(barcode),
       score: (json['health_score'] as num?)?.toInt() ?? 0,
       nutriScore: (json['nutri_score'] as String?)?.toUpperCase() ?? 'C',
       novaGroup: (json['nova_group'] as num?)?.toInt() ?? 3,
@@ -125,7 +134,7 @@ class BackendDataSource {
       id: json['product_id'] as String? ?? '',
       name: json['name'] as String? ?? 'Unknown Product',
       subtitle: json['brand'] as String? ?? 'Unknown Brand',
-      imageUrl: imageUrl.isNotEmpty ? imageUrl : offCdnImageUrl(barcode),
+      imageUrl: imageUrl.isNotEmpty ? proxyImageUrl(imageUrl) : offCdnImageUrl(barcode),
       score: (json['health_score'] as num?)?.toInt() ?? 0,
       nutriScore: (json['nutri_score'] as String?)?.toUpperCase() ?? 'C',
       novaGroup: (json['nova_group'] as num?)?.toInt() ?? 3,
@@ -173,7 +182,7 @@ class BackendDataSource {
             id: item['product_id']?.toString() ?? '',
             name: item['name'] as String? ?? 'Unknown',
             subtitle: item['brand'] as String? ?? '',
-            imageUrl: img.isNotEmpty ? img : offCdnImageUrl(bc),
+            imageUrl: img.isNotEmpty ? proxyImageUrl(img) : offCdnImageUrl(bc),
             score: (item['health_score'] as num?)?.toInt() ?? 0,
             nutriScore: (item['nutri_score'] as String?)?.toUpperCase() ?? 'C',
             novaGroup: (item['nova_group'] as num?)?.toInt() ?? 3,

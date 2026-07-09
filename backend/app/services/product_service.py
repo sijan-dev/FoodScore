@@ -62,6 +62,6 @@ def get_product(product_id: str, db: Session):
 
 def list_products(db: Session, skip: int = 0, limit: int = 20):
     return db.execute(text("""
-        SELECT product_id, name, brand, health_score, is_harmful
+        SELECT product_id, name, brand, health_score, is_harmful, image_url, barcode
         FROM products ORDER BY created_at DESC LIMIT :limit OFFSET :skip
     """), {"limit": limit, "skip": skip}).fetchall()

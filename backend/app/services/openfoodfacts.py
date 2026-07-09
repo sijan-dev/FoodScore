@@ -7,6 +7,19 @@ from app.services.score_service import compute_score
 logger = logging.getLogger(__name__)
 
 
+OFF_IMAGE_DOMAINS = ("https://images.openfoodfacts.org/", "https://static.openfoodfacts.org/")
+
+
+def rewrite_image_url(url: str | None) -> str | None:
+    """Rewrite OFF CDN URLs to use world.openfoodfacts.org (more widely accessible)."""
+    if not url:
+        return url
+    for domain in OFF_IMAGE_DOMAINS:
+        if url.startswith(domain):
+            return url.replace(domain, "https://world.openfoodfacts.org/", 1)
+    return url
+
+
 def cdn_image_url(barcode: str | None) -> str | None:
     """Generate OFF CDN image URL from barcode, or None if barcode is invalid."""
     if not barcode or not isinstance(barcode, str) or not barcode.strip():
@@ -19,7 +32,7 @@ def cdn_image_url(barcode: str | None) -> str | None:
         p1, p2, p3 = bc[:3], bc[3:6], bc[6:]
     else:
         p1, p2, p3 = bc[:3], bc[3:7], bc[7:]
-    return f"https://images.openfoodfacts.org/images/products/{p1}/{p2}/{p3}/front.en.400.jpg"
+    return f"https://world.openfoodfacts.org/images/products/{p1}/{p2}/{p3}/front.en.400.jpg"
 
 def _extract_selected_image(product: dict) -> str | None:
     """Fallback: extract image from selected_images nested structure."""
@@ -61,7 +74,7 @@ async def fetch_from_openfoodfacts(barcode: str) -> dict | None:
             product = data["product"]
             
             # Extract relevant data
-            image_url = (
+            image_url = rewrite_image_url(
                 product.get("image_front_url")
                 or product.get("image_front_small_url")
                 or _extract_selected_image(product)

@@ -6,13 +6,16 @@ from app.config import DATABASE_URL
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is not set in .env")
 
-# Add sslmode=require for cloud databases (Neon) if not already present
+# Add sslmode=require for cloud databases (Neon) if not already present.
+# Skip for local/Docker (localhost, 127.0.0.1, 0.0.0.0) to avoid SSL errors.
 parsed = urlparse(DATABASE_URL)
-query = parse_qs(parsed.query)
-if "sslmode" not in query:
-    query["sslmode"] = ["require"]
-    parsed = parsed._replace(query=urlencode(query, doseq=True))
-    DATABASE_URL = urlunparse(parsed)
+host = parsed.hostname or ""
+if host not in ("localhost", "127.0.0.1", "0.0.0.0"):
+    query = parse_qs(parsed.query)
+    if "sslmode" not in query:
+        query["sslmode"] = ["require"]
+        parsed = parsed._replace(query=urlencode(query, doseq=True))
+        DATABASE_URL = urlunparse(parsed)
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
