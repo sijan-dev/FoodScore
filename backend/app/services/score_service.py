@@ -1,7 +1,10 @@
+import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 import json
 from app.ml.scorer import predict_nutriscore
+
+logger = logging.getLogger(__name__)
 
 TIER_PENALTIES = {
     "harmful": 100,
@@ -76,9 +79,15 @@ def compute_score(product_id: str, db: Session) -> dict:
 
     # Check nutriments if not already harmful
     if not is_harmful and nutriments:
-        nut_data = nutriments or {}
+        nut_data = nutriments
         for field, high, medium, penalty in NUTRIMENT_RULES:
-            value = nut_data.get(field) or nut_data.get(field.replace('_', '-', 1)) or 0
+            raw = nut_data.get(field)
+            if raw is None:
+                raw = nut_data.get(field.replace('_', '-'))
+            if raw is None:
+                continue
+            value = float(raw)
+            value = max(0, min(100, value))
             if penalty > 0:
                 if value >= high:
                     score -= penalty
@@ -90,18 +99,20 @@ def compute_score(product_id: str, db: Session) -> dict:
                 elif value >= high:
                     score += abs(penalty) // 2
 
-    # NOVA modifier
-    nova_mod = {1: 5, 2: 0, 3: -5, 4: -15}
-    score += nova_mod.get(nova_group, 0)
-
     # Nutri-Score modifier — use ML prediction if not available
     ml_predicted_nutriscore = None
-    if not nutri_score and nutriments:
-       nutri_score = predict_nutriscore(nutriments)
-    ml_predicted_nutriscore = nutri_score
+    if not is_harmful:
+        if nova_group is None:
+            logger.warning("NOVA group is None for product %s", product_id)
+        nova_mod = {1: 5, 2: 0, 3: -5, 4: -15}
+        score += nova_mod.get(nova_group, 0)
 
-    nutri_mod = {"A": 5, "B": 3, "C": 0, "D": -5, "E": -10}
-    score += nutri_mod.get(nutri_score, 0)
+        if not nutri_score and nutriments:
+           nutri_score = predict_nutriscore(nutriments)
+        ml_predicted_nutriscore = nutri_score
+
+        nutri_mod = {"A": 5, "B": 3, "C": 0, "D": -5, "E": -10}
+        score += nutri_mod.get(nutri_score, 0)
 
     # Clamp
     score = max(0, min(100, score))

@@ -15,7 +15,7 @@ router = APIRouter(prefix="/scan", tags=["Scan History"])
 @router.post("/history")
 def save_scan(
     scan_data: ScanHistoryCreate,
-    authorization: str = Header(None),
+    authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db)
 ):
     if not authorization:
@@ -47,7 +47,7 @@ def save_scan(
     return {"scan_id": scan_id, "message": "Scan saved successfully"}
 
 @router.get("/history")
-def get_history(limit: int = 20, authorization: str = Header(None), db: Session = Depends(get_db)):
+def get_history(limit: int = 20, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     if not authorization:
         raise HTTPException(status_code=401, detail="Token required")
     

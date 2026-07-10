@@ -36,8 +36,6 @@ def get_recommendations_endpoint(limit: int = 5, db: Session = Depends(get_db)):
 @router.get("/scan/{barcode}")
 async def scan_barcode_endpoint(barcode: str, db: Session = Depends(get_db)):
     """Scan a product by barcode - checks local DB first, then OpenFoodFacts"""
-    from app.services.openfoodfacts import scan_barcode
-
     try:
         result = await scan_barcode(barcode, db)
     except Exception as e:
@@ -61,9 +59,10 @@ async def scan_barcode_endpoint(barcode: str, db: Session = Depends(get_db)):
         "category": row[3], "image_url": img,
         "health_score": row[5], "is_harmful": row[6],
         "nova_group": row[7], "nutri_score": row[8], "nutriments": row[9],
-        "additives": row[10], "suggestion": row[11],
-        "flagged_ingredients": row[12],
-        "traffic_light": score_service.get_traffic_light(row[5] or 0, row[6] or False)
+        "additives": row[10], "suggestion": row[12],
+        "flagged_ingredients": row[13],
+        "traffic_light": score_service.get_traffic_light(row[5] or 0, row[6] or False),
+        "barcode": barcode
     }
 
 @router.get("/{product_id}/alternatives")
@@ -76,15 +75,14 @@ def get_product(product_id: str, db: Session = Depends(get_db)):
     row = product_service.get_product(product_id, db)
     if not row:
         raise HTTPException(status_code=404, detail="Product not found")
-    bc = db.execute(text("SELECT barcode FROM products WHERE product_id = :pid"), {"pid": product_id}).scalar()
-    img = row[4] or cdn_image_url(bc)
+    img = row[4] or cdn_image_url(row[11])
     return {
         "product_id": row[0], "name": row[1], "brand": row[2],
         "category": row[3], "image_url": img,
         "health_score": row[5], "is_harmful": row[6],
         "nova_group": row[7], "nutri_score": row[8], "nutriments": row[9],
-        "additives": row[10], "suggestion": row[11],
-        "flagged_ingredients": row[12],
+        "additives": row[10], "barcode": row[11], "suggestion": row[12],
+        "flagged_ingredients": row[13],
         "traffic_light": score_service.get_traffic_light(row[5] or 0, row[6] or False)
     }
 
@@ -116,11 +114,13 @@ def get_nutrient_summary(product_id: str, db: Session = Depends(get_db)):
         }
         return messages[nutrient][lvl]
     
-    sugar = nut.get("sugars_100g") or 0
-    fat   = nut.get("saturated_fat_100g") or 0
-    salt  = nut.get("salt_100g") or 0
-    fiber = nut.get("fiber_100g") or 0
-    protein = nut.get("proteins_100g") or 0
+    def _f(val):
+        return val if val is not None else 0
+    sugar = _f(nut.get("sugars_100g"))
+    fat   = _f(nut.get("saturated_fat_100g"))
+    salt  = _f(nut.get("salt_100g"))
+    fiber = _f(nut.get("fiber_100g"))
+    protein = _f(nut.get("proteins_100g"))
     
     return {
         "product_id": product_id,

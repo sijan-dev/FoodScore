@@ -3,7 +3,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-os.environ.setdefault("DATABASE_URL", "sqlite://")
+os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 os.environ.setdefault("SECRET_KEY", "test-secret")
 os.environ.setdefault("GOOGLE_CLIENT_ID", "test-google-client")
 
