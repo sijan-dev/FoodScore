@@ -6,7 +6,7 @@ from sqlalchemy import text
 FEATURE_FIELDS = ["sugars_100g", "saturated_fat_100g", "salt_100g", "fiber_100g", "proteins_100g"]
 
 
-def fetch_feature_matrix(db: Session, category: str = None):
+def fetch_feature_matrix(db: Session, category: str = None, nova_group: int = None):
     """Pull products with nutriments and build a feature matrix"""
     query = """
         SELECT product_id, name, brand, health_score, nutriments, category
@@ -17,7 +17,10 @@ def fetch_feature_matrix(db: Session, category: str = None):
     if category:
         query += " AND category = :cat"
         params["cat"] = category
-
+    elif nova_group:
+        query += " AND nova_group = :nova"
+        params["nova"] = nova_group
+    
     rows = db.execute(text(query), params).fetchall()
 
     product_ids, names, brands, scores, vectors = [], [], [], [], []
@@ -40,7 +43,8 @@ def find_similar_healthier(product_id: str, db: Session, top_n: int = 5):
       - healthier: same category, strictly higher score only
     """
     row = db.execute(text("""
-        SELECT nutriments, category, health_score FROM products WHERE product_id = :pid
+        SELECT nutriments, category, health_score, nova_group
+        FROM products WHERE product_id = :pid
     """), {"pid": product_id}).fetchone()
 
     if not row or not row.nutriments:
@@ -49,10 +53,16 @@ def find_similar_healthier(product_id: str, db: Session, top_n: int = 5):
     target_vec = np.array([[row.nutriments.get(f) or row.nutriments.get(f.replace('_', '-')) or 0 for f in FEATURE_FIELDS]])
     current_score = row.health_score or 0
 
+    # Level 1: same category
     ids, names, brands, scores, matrix = fetch_feature_matrix(db, category=row.category)
 
+    # Level 2: same NOVA group if category too small
+    if len(matrix) < 2 and row.nova_group:
+        ids, names, brands, scores, matrix = fetch_feature_matrix(db, nova_group=row.nova_group)
+
+    # Level 3: full DB fallback
     if len(matrix) < 2:
-        return {"similar": [], "healthier": []}
+        ids, names, brands, scores, matrix = fetch_feature_matrix(db)
 
     n_neighbors = min(top_n + 5, len(matrix))
     model = NearestNeighbors(n_neighbors=n_neighbors, metric="euclidean")
