@@ -1,8 +1,11 @@
+import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from typing import List, Dict, Any, Optional
 from app.ml.recommender import find_similar_healthier
 from app.services.openfoodfacts import cdn_image_url
+
+logger = logging.getLogger(__name__)
 
 def get_recommendations(user_id: Optional[str] = None, limit: int = 5, db: Session = None) -> List[Dict[str, Any]]:
     """Get product recommendations"""
@@ -18,7 +21,7 @@ def get_recommendations(user_id: Optional[str] = None, limit: int = 5, db: Sessi
             LIMIT :limit
         """), {"limit": limit}).fetchall()
     except Exception as e:
-        print(f"Error getting recommendations: {e}")
+        logger.error("Error getting recommendations: %s", e)
         return []
     
     return [
@@ -70,5 +73,5 @@ def get_better_alternatives(product_id: str, db: Session):
             "healthier": [enrich(r) for r in healthier]
         }
     except Exception as e:
-        print(f"Error getting ML alternatives: {e}")
+        logger.error("Error getting ML alternatives: %s", e)
         return {"similar": [], "healthier": []}

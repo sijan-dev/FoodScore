@@ -41,7 +41,7 @@ def get_product(product_id: str, db: Session):
     return db.execute(text("""
         SELECT p.product_id, p.name, p.brand, p.category, p.image_url,
                p.health_score, p.is_harmful, p.nova_group,
-               p.nutri_score, p.nutriments, p.additives,
+               p.nutri_score, p.nutriments, p.additives, p.barcode,
                s.suggestion_text,
                COALESCE(
                    json_agg(

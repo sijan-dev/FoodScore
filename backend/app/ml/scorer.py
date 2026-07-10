@@ -1,5 +1,8 @@
+import logging
 from app.ml.loader import load_model
 from app.ml.preprocessor import extract_features
+
+logger = logging.getLogger(__name__)
 
 def predict_nutriscore(nutriments: dict) -> str:
     """Predict Nutri-Score grade (A-E) from nutriments using ML model"""
@@ -9,5 +12,5 @@ def predict_nutriscore(nutriments: dict) -> str:
         prediction = model.predict(features)
         return prediction[0]
     except Exception as e:
-        print(f"ML prediction error: {e}")
+        logger.error("ML prediction error: %s", e)
         return None

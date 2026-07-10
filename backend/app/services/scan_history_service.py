@@ -1,8 +1,11 @@
 import uuid
+import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 def save_scan(user_id: str, db: Session, product_id: Optional[str] = None, barcode: Optional[str] = None, score: Optional[int] = None) -> Optional[str]:
     """Save a scan to history"""
@@ -11,7 +14,7 @@ def save_scan(user_id: str, db: Session, product_id: Optional[str] = None, barco
     
     # Validate: must have either product_id or barcode
     if not product_id and not barcode:
-        print("Error: Neither product_id nor barcode provided")
+        logger.error("Neither product_id nor barcode provided")
         return None
     
     scan_id = str(uuid.uuid4())
@@ -24,7 +27,7 @@ def save_scan(user_id: str, db: Session, product_id: Optional[str] = None, barco
         db.commit()
     except Exception as e:
         db.rollback()
-        print(f"Error saving scan: {e}")
+        logger.error("Error saving scan: %s", e)
         return None
     
     return scan_id
@@ -45,7 +48,7 @@ def get_user_scans(user_id: str, db: Session, limit: int = 20) -> List[Dict[str,
             LIMIT :limit
         """), {"uid": user_id, "limit": limit}).fetchall()
     except Exception as e:
-        print(f"Error getting user scans: {e}")
+        logger.error("Error getting user scans: %s", e)
         return []
     
     return [
@@ -80,7 +83,7 @@ def get_recent_scans(db: Session, limit: int = 10) -> List[Dict[str, Any]]:
             LIMIT :limit
         """), {"limit": limit}).fetchall()
     except Exception as e:
-        print(f"Error getting recent scans: {e}")
+        logger.error("Error getting recent scans: %s", e)
         return []
     
     return [

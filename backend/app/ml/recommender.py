@@ -23,7 +23,7 @@ def fetch_feature_matrix(db: Session, category: str = None):
     product_ids, names, brands, scores, vectors = [], [], [], [], []
     for r in rows:
         nut = r.nutriments or {}
-        vec = [nut.get(f) or nut.get(f.replace('_', '-', 1)) or 0 for f in FEATURE_FIELDS]
+        vec = [nut.get(f) or nut.get(f.replace('_', '-')) or 0 for f in FEATURE_FIELDS]
         product_ids.append(r.product_id)
         names.append(r.name)
         brands.append(r.brand)
@@ -46,7 +46,7 @@ def find_similar_healthier(product_id: str, db: Session, top_n: int = 5):
     if not row or not row.nutriments:
         return {"similar": [], "healthier": []}
 
-    target_vec = np.array([[row.nutriments.get(f) or row.nutriments.get(f.replace('_', '-', 1)) or 0 for f in FEATURE_FIELDS]])
+    target_vec = np.array([[row.nutriments.get(f) or row.nutriments.get(f.replace('_', '-')) or 0 for f in FEATURE_FIELDS]])
     current_score = row.health_score or 0
 
     ids, names, brands, scores, matrix = fetch_feature_matrix(db, category=row.category)
