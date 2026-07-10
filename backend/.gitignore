@@ -30,3 +30,9 @@ wheels/
 *.swp
 *.swo
 *~
+__pycache__/
+*.pyc
+venv/
+.env
+*.db
+.pytest_cache/
